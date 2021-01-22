@@ -1,0 +1,5 @@
+#ignore files
+*~
+#ignore directories
+runs/
+results/
