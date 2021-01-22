@@ -41,6 +41,8 @@ from transformers import (
 from transformers.trainer_utils import is_main_process
 # MODIFY --> Import new BertForSequenceClassification
 from modeling_bert import BertForSequenceClassification
+# MODIFY --> Import custom dataset to pach train dataset
+from custom_dataset import *
 
 #MODIFY --> change order, following the task id order
 task_to_keys = {
@@ -407,11 +409,16 @@ def main():
             return {"accuracy": (preds == p.label_ids).astype(np.float32).mean().item()}
 
     # Initialize our Trainer
+    #MODIFY --> use new dataset to pack train datasets
+    train_dataset_all = MergeDataset(training_args, train_dataset_list)
+    #MODIFY --> set train batch size to 1 forr trainer(the real batch size have been sended to MergeDataset)
+    training_args.train_batch_size = 1
+
     trainer = Trainer(
         model=model,
         args=training_args,
         #MODIFY --> train_dataset --> train_dataset_list, 需要改training process
-        train_dataset=train_dataset,
+        train_dataset=train_dataset_all,
         #MODIFY --> 移除eval的部分，在Eval函式那邊再給eval_dataset 和 compute_metrics
         #eval_dataset=eval_dataset if training_args.do_eval else None,
         compute_metrics=compute_metrics,
