@@ -1,5 +1,13 @@
 export TASK_NAME=rte
 export POSTFIX=test
+export BATCHSIZE=128
+
+#need to deal with batch size and steps...
+ARRAY=( "mnli:1000..." )
+
+#For save steps
+D_=(${DATA[cow]//:/ })
+D=${D[1]}
 
 CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
   --model_name_or_path bert-base-cased \
@@ -7,10 +15,9 @@ CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
   --do_train \
   --do_eval \
   --max_seq_length 128 \
-  --per_device_train_batch_size 32 \
+  --per_device_train_batch_size $BATCHSIZE \
   --learning_rate 2e-5 \
   --num_train_epochs 3 \
-  --overwrite_output_dir \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/
 
 #Need to do this incase that the trainer load the state in finetuning for continue training

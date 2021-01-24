@@ -226,7 +226,6 @@ def main():
     label_list_list = []
     if data_args.task_name == "all":
         ALL_TASK_NAMES = ["mnli", "rte", "qqp", "qnli", "mrpc", "sst2", "cola", "stsb"]
-        ALL_TASK_NAMES = ["rte", "mrpc"]
     else:
         ALL_TASK_NAMES = [data_args.task_name]
     for task_name in ALL_TASK_NAMES:
