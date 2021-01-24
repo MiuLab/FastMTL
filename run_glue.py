@@ -108,7 +108,7 @@ class DataTrainingArguments:
             self.task_name = self.task_name.lower()
             #MODIFY --> enable task_name == all
             #if self.task_name not in task_to_keys.keys():
-            if self.task_name not in task_to_keys.keys() or self.task_name != "all":
+            if self.task_name not in task_to_keys.keys() and self.task_name != "all":
                 raise ValueError("Unknown task, you should pick one in " + ",".join(task_to_keys.keys()))
         elif self.train_file is None or self.validation_file is None:
             raise ValueError("Need either a GLUE task or a training/validation file.")
@@ -219,14 +219,14 @@ def main():
     # In distributed training, the load_dataset function guarantee that only one local process can concurrently
     # download the dataset.
 
-    # MODIFY --> get list of dataset, add datasets_list, num_labels_list, label_list_list
+    # MODIFY --> get list of dataset, add datasets_dict, num_labels_list, label_list_list
     # !!! data_args.task_name == "all" 時不適用自己load的dataset(data_args.train_file等)
-    datasets_list = []
+    datasets_dict = {}
     num_labels_dict = {}
     label_list_list = []
     if data_args.task_name == "all":
         ALL_TASK_NAMES = ["mnli", "rte", "qqp", "qnli", "mrpc", "sst2", "cola", "stsb"]
-        ALL_TASK_NAMES = ["rte", "sst2"]
+        ALL_TASK_NAMES = ["rte", "mrpc"]
     else:
         ALL_TASK_NAMES = [data_args.task_name]
     for task_name in ALL_TASK_NAMES:
@@ -284,7 +284,7 @@ def main():
                 label_list.sort()  # Let's sort it for determinism
                 num_labels = len(label_list)
         # MODIFY --> add datasets, label_list and num_labels to lists
-        datasets_list.append(datasets)
+        datasets_dict[data_args.task_name] = datasets
         num_labels_dict[data_args.task_name] = num_labels
         label_list_list.append(label_list)
 
@@ -329,6 +329,7 @@ def main():
     test_dataset_list = [] 
     for task_name in ALL_TASK_NAMES:
         data_args.task_name = task_name
+        datasets = datasets_dict[data_args.task_name]
         # Preprocessing the datasets
         if data_args.task_name is not None:
             sentence1_key, sentence2_key = task_to_keys[data_args.task_name]
@@ -381,8 +382,9 @@ def main():
             if label_to_id is not None and "label" in examples:
                 result["label"] = [label_to_id[l] for l in examples["label"]]
             return result
-
-        datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=not data_args.overwrite_cache)
+        #MODIFY --> don't use cache
+        #datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=not data_args.overwrite_cache)
+        datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=False)
 
         train_dataset = datasets["train"]
         eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]

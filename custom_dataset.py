@@ -45,6 +45,8 @@ class MergeDataset(Dataset):
         inputs = self.iter_list[d_l_id].next()
         #add task_id key and value, del [idx]? not sure why we get idx
         inputs["task_name"] = self.all_task_names[d_l_id]
+        print("Task:", self.all_task_names[d_l_id])
+        print("IDX:", inputs["idx"])
         del inputs["idx"]
         #check if one epoch is done
         if self.cnt_iter == self.__len__():
