@@ -31,7 +31,6 @@ then
     done
 fi
 echo $SAVE_STEPS
-exit
 
 #Run
 CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
