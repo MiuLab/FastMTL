@@ -219,11 +219,12 @@ def main():
     # In distributed training, the load_dataset function guarantee that only one local process can concurrently
     # download the dataset.
 
-    # MODIFY --> get list of dataset, add datasets_dict, num_labels_list, label_list_list
+    # MODIFY --> get list of dataset, add datasets_dict, num_labels_list, label_list_dict
     # !!! data_args.task_name == "all" 時不適用自己load的dataset(data_args.train_file等)
     datasets_dict = {}
     num_labels_dict = {}
-    label_list_list = []
+    label_list_dict = {}
+    is_regression_dict = {}
     if data_args.task_name == "all":
         ALL_TASK_NAMES = ["mnli", "rte", "qqp", "qnli", "mrpc", "sst2", "cola", "stsb"]
     else:
@@ -264,6 +265,7 @@ def main():
         # https://huggingface.co/docs/datasets/loading_datasets.html.
 
         # Labels
+        label_list = None
         if data_args.task_name is not None:
             is_regression = data_args.task_name == "stsb"
             if not is_regression:
@@ -285,7 +287,8 @@ def main():
         # MODIFY --> add datasets, label_list and num_labels to lists
         datasets_dict[data_args.task_name] = datasets
         num_labels_dict[data_args.task_name] = num_labels
-        label_list_list.append(label_list)
+        label_list_dict[data_args.task_name] = label_list
+        is_regression_dict[data_args.task_name] = is_regression
 
     # Load pretrained model and tokenizer
     #
@@ -327,8 +330,13 @@ def main():
     eval_dataset_list = [] 
     test_dataset_list = [] 
     for task_name in ALL_TASK_NAMES:
+        # ----------------------------------------- set param start -----------------------------------------
         data_args.task_name = task_name
+        label_list = label_list_dict[data_args.task_name]
         datasets = datasets_dict[data_args.task_name]
+        num_labels = num_labels_dict[data_args.task_name]
+        is_regression = is_regression_dict[data_args.task_name]
+        # ----------------------------------------- set param end -----------------------------------------
         # Preprocessing the datasets
         if data_args.task_name is not None:
             sentence1_key, sentence2_key = task_to_keys[data_args.task_name]
@@ -350,24 +358,26 @@ def main():
             # We will pad later, dynamically at batch creation, to the max sequence length in each batch
             padding = False
 
+        # MODIFY --> Ignore this case
+        model.config.label2id = None
         # Some models have set the order of the labels to use, so let's make sure we do use it.
         label_to_id = None
-        if (
-            model.config.label2id != PretrainedConfig(num_labels=num_labels).label2id
-            and data_args.task_name is not None
-            and is_regression
-        ):
-            # Some have all caps in their config, some don't.
-            label_name_to_id = {k.lower(): v for k, v in model.config.label2id.items()}
-            if list(sorted(label_name_to_id.keys())) == list(sorted(label_list)):
-                label_to_id = {i: label_name_to_id[label_list[i]] for i in range(num_labels)}
-            else:
-                logger.warn(
-                    "Your model seems to have been trained with labels, but they don't match the dataset: ",
-                    f"model labels: {list(sorted(label_name_to_id.keys()))}, dataset labels: {list(sorted(label_list))}."
-                    "\nIgnoring the model labels as a result.",
-                )
-        elif data_args.task_name is None and not is_regression:
+        #if (
+        #    model.config.label2id != PretrainedConfig(num_labels=num_labels).label2id
+        #    and data_args.task_name is not None
+        #    and is_regression
+        #):
+        #    # Some have all caps in their config, some don't.
+        #    label_name_to_id = {k.lower(): v for k, v in model.config.label2id.items()}
+        #    if list(sorted(label_name_to_id.keys())) == list(sorted(label_list)):
+        #        label_to_id = {i: label_name_to_id[label_list[i]] for i in range(num_labels)}
+        #    else:
+        #        logger.warn(
+        #            "Your model seems to have been trained with labels, but they don't match the dataset: ",
+        #            f"model labels: {list(sorted(label_name_to_id.keys()))}, dataset labels: {list(sorted(label_list))}."
+        #            "\nIgnoring the model labels as a result.",
+        #        )
+        if data_args.task_name is None and not is_regression:
             label_to_id = {v: i for i, v in enumerate(label_list)}
 
         def preprocess_function(examples):
@@ -471,7 +481,13 @@ def main():
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset in zip(ALL_TASK_NAMES, eval_dataset_list):
+            # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
+            label_list = label_list_dict[data_args.task_name]
+            datasets = datasets_dict[data_args.task_name]
+            num_labels = num_labels_dict[data_args.task_name]
+            is_regression = is_regression_dict[data_args.task_name]
+            # ----------------------------------------- set param end -----------------------------------------
             trainer.model.task_name = data_args.task_name
             # MODIFY 在這邊get metrics
             # Get the metric function
@@ -502,7 +518,13 @@ def main():
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset in zip(ALL_TASK_NAMES, eval_dataset_list):
+            # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
+            label_list = label_list_dict[data_args.task_name]
+            datasets = datasets_dict[data_args.task_name]
+            num_labels = num_labels_dict[data_args.task_name]
+            is_regression = is_regression_dict[data_args.task_name]
+            # ----------------------------------------- set param end -----------------------------------------
             trainer.model.task_name = data_args.task_name
             # MODIFY 在這邊get metrics
             # Get the metric function
