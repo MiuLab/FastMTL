@@ -420,19 +420,8 @@ def main():
 
     # Initialize our Trainer
     #MODIFY --> use new dataset to pack train datasets, tokenizer is for the datacollator
-    train_dataset_all = MergeDataset(training_args, train_dataset_list, ALL_TASK_NAMES, tokenizer)
-    dataloader = DataLoader(
-            train_dataset_all,
-            batch_size=1,
-            #sampler=train_sampler,
-            #collate_fn=self.data_collator,
-            #drop_last=self.args.dataloader_drop_last,
-            #num_workers=self.args.dataloader_num_workers,
-        )
-    print(train_dataset_all[0])
-    d = iter(dataloader)
-    print(d.next())
-
+    train_dataset_all = MergeDataset(training_args, train_dataset_list, ALL_TASK_NAMES)
+    custom_data_collator = CustomDataCollator()
 
     trainer = Trainer(
         model=model,
@@ -444,7 +433,9 @@ def main():
         compute_metrics=compute_metrics,
         tokenizer=tokenizer,
         # Data collator will default to DataCollatorWithPadding, so we change it if we already did the padding.
-        data_collator=default_data_collator if data_args.pad_to_max_length else None,
+        #data_collator=default_data_collator if data_args.pad_to_max_length else None,
+        data_collator=custom_data_collator
+
     )
 
     # Training

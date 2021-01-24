@@ -38,6 +38,8 @@ class BertForSequenceClassification(BertPreTrainedModel):
         #MODIFY --> add flag to indicate task
         task_name = None, 
     ):
+        print(task_name)
+        print(input_ids)
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`):
             Labels for computing the sequence classification/regression loss. Indices should be in :obj:`[0, ...,

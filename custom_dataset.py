@@ -4,25 +4,27 @@ def _get_train_sampler(args,dataset):
     if isinstance(dataset, torch.utils.data.IterableDataset) or not isinstance(
         dataset, collections.abc.Sized
     ):
+        print("--------------- None ---------------")
         return None
     elif is_torch_tpu_available():
+        print("--------------- ELIF ---------------")
         return get_tpu_sampler(dataset)
     else:
+        print("--------------- Rand ---------------")
         return (
             RandomSampler(dataset)
             if args.local_rank == -1
             else DistributedSampler(dataset)
         )
 class MergeDataset(Dataset):
-    def __init__(self, args, datasets_list, all_task_names, tokenizer):
+    def __init__(self, args, datasets_list, all_task_names):
         self.args = args
         self.num_datasets = len(datasets_list)
         self.all_task_names = all_task_names
         self.dataloader_list = []
         self.iter_list = []
         #set data_collator
-        self.data_collator = DataCollatorWithPadding(tokenizer)
-        #self.data_collator = default_data_collator
+        self.data_collator = default_data_collator
         for dataset in datasets_list:
             train_sampler = _get_train_sampler(args, dataset)
             # The dataloader in the trainer will get batchsize=1
@@ -53,9 +55,19 @@ class MergeDataset(Dataset):
             if idx in d_l_range:
                 d_l_id = i 
         # random sample this dataloader
-
         inputs = self.iter_list[d_l_id].next()
-        #add task_id key and value
-        print("-------------------", inputs)
+        #add task_id key and value, del [idx]? not sure why we get idx
         inputs["task_name"] = self.all_task_names[d_l_id]
+        del inputs["idx"]
         return inputs
+
+#Data collator for trainer(sample 1 example each iter)
+class CustomDataCollator:
+    def __init__(self):
+        print("Init custom Dataloader for trainer")
+
+    def __call__(self, examples: List[dict]):
+        print("\n------------------------------EXAMPLES:  ", examples)
+        return examples[0]
+
+
