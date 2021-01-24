@@ -7,7 +7,7 @@ declare -A DATA
 DATA=( ['mnli']=392702 
     ['rte']=2490 
     ['qqp']=363849 
-    ['qnli']=108436 
+    ['qnli']=104743 
     ['mrpc']=3668 
     ['sst2']=67349 
     ['cola']=8551 

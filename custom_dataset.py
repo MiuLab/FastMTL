@@ -27,8 +27,9 @@ class MergeDataset(Dataset):
         #data_idx range
         self.dataloader_range = []
         cnt = 0
-        for d_l in self.dataloader_list:
+        for d_l, task_name in zip(self.dataloader_list, self.all_task_names):
             self.dataloader_range.append(range(cnt,cnt+len(d_l)))
+            print("----------- Data Num: ",task_name, len(d_l))
             cnt+=len(d_l)
 
     def __len__(self):
