@@ -33,16 +33,20 @@ from transformers import (
     EvalPrediction,
     HfArgumentParser,
     PretrainedConfig,
-    Trainer,
+    #MODIFY --> use our trainer
+    #Trainer,
     TrainingArguments,
     default_data_collator,
     set_seed,
 )
+
 from transformers.trainer_utils import is_main_process
 # MODIFY --> Import new BertForSequenceClassification
 from modeling_bert import BertForSequenceClassification
 # MODIFY --> Import custom dataset to pach train dataset
 from custom_dataset import *
+#MODIFY --> use our trainer
+from trainer import Trainer
 
 #MODIFY --> change order, following the task id order
 task_to_keys = {
@@ -156,6 +160,9 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
+    #MODIFY --> get real train_batch_size
+    TrainingArguments.real_train_batch_size = TrainingArguments.train_batch_size
+    TrainingArguments.train_batch_size = 1
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
@@ -213,7 +220,7 @@ def main():
     # MODIFY --> get list of dataset, add datasets_list, num_labels_list, label_list_list
     # !!! data_args.task_name == "all" 時不適用自己load的dataset(data_args.train_file等)
     datasets_list = []
-    num_labels_list = []
+    num_labels_dict = {}
     label_list_list = []
     if data_args.task_name == "all":
         ALL_TASK_NAMES = ["mnli", "rte", "qqp", "qnli", "mrpc", "sst2", "cola", "stsb"]
@@ -275,7 +282,7 @@ def main():
                 num_labels = len(label_list)
         # MODIFY --> add datasets, label_list and num_labels to lists
         datasets_list.append(datasets)
-        num_labels_list.append(num_labels)
+        num_labels_dict[data_args.task_name] = num_labels
         label_list_list.append(label_list)
 
     # Load pretrained model and tokenizer
@@ -284,14 +291,17 @@ def main():
     # download model & vocab.
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-        #MODIFY --> change num_labels to num_labels_list
+        #MODIFY --> don't set num labels
         #num_labels=num_labels,
-        num_labels_list=num_labels_list,
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
+    #MODIFY --> add num labels list and all task names
+    config.num_labels_dict = num_labels_dict
+    config.all_task_names = ALL_TASK_NAMES
+
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -409,10 +419,20 @@ def main():
             return {"accuracy": (preds == p.label_ids).astype(np.float32).mean().item()}
 
     # Initialize our Trainer
-    #MODIFY --> use new dataset to pack train datasets
-    train_dataset_all = MergeDataset(training_args, train_dataset_list)
-    #MODIFY --> set train batch size to 1 forr trainer(the real batch size have been sended to MergeDataset)
-    training_args.train_batch_size = 1
+    #MODIFY --> use new dataset to pack train datasets, tokenizer is for the datacollator
+    train_dataset_all = MergeDataset(training_args, train_dataset_list, ALL_TASK_NAMES, tokenizer)
+    dataloader = DataLoader(
+            train_dataset_all,
+            batch_size=1,
+            #sampler=train_sampler,
+            #collate_fn=self.data_collator,
+            #drop_last=self.args.dataloader_drop_last,
+            #num_workers=self.args.dataloader_num_workers,
+        )
+    print(train_dataset_all[0])
+    d = iter(dataloader)
+    print(d.next())
+
 
     trainer = Trainer(
         model=model,

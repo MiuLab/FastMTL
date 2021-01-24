@@ -1,31 +1,28 @@
 #import original file
 from transformers.models.bert.modeling_bert import *
+import logging
 
 # Modified model
-# Init --> Config should have num_labels_list
+# Init --> Config should have num_labels_dict
 # Forward --> need to input task_id
 class BertForSequenceClassification(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
-        #MODIFY --> change num_labels to num_labels_list
+        #MODIFY --> change num_labels to num_labels_dict
         #self.num_labels = config.num_labels
-        self.num_labels_list = config.num_labels_list
+        self.num_labels_dict = config.num_labels_dict
+        self.all_task_names = config.all_task_names
 
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         #MODIFY --> change classifier to classifier list
         #self.classifier = nn.Linear(config.hidden_size, config.num_labels)
-        self.classifier_list = [ nn.Linear(config.hidden_size, num_labels_list) for num_labels in self.num_labels_list]
+        self.classifier_list = {}
+        for task_name in self.all_task_names:
+            self.classifier_list[task_name] = nn.Linear(config.hidden_size, self.num_labels_dict[task_name]) 
 
         self.init_weights()
 
-    @add_start_docstrings_to_model_forward(BERT_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        tokenizer_class=_TOKENIZER_FOR_DOC,
-        checkpoint="bert-base-uncased",
-        output_type=SequenceClassifierOutput,
-        config_class=_CONFIG_FOR_DOC,
-    )
     def forward(
         self,
         input_ids=None,
@@ -39,7 +36,7 @@ class BertForSequenceClassification(BertPreTrainedModel):
         output_hidden_states=None,
         return_dict=None,
         #MODIFY --> add flag to indicate task
-        task_id = None, 
+        task_name = None, 
     ):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`):
@@ -66,10 +63,10 @@ class BertForSequenceClassification(BertPreTrainedModel):
         pooled_output = self.dropout(pooled_output)
         #MODIFY --> use correspond classifier
         #logits = self.classifier(pooled_output)
-        logits = self.classifier_list[task_id](pooled_output)
+        logits = self.classifier_list[task_name](pooled_output)
 
-        #MODIFY --> assign self.num_labels using task_id
-        self.num_labels = self.num_labels_list[task_id]
+        #MODIFY --> assign self.num_labels using task_name
+        self.num_labels = self.num_labels_dict[task_name]
         loss = None
         if labels is not None:
             if self.num_labels == 1:
