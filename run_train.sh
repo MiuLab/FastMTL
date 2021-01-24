@@ -1,4 +1,4 @@
-export TASK_NAME=rte
+export TASK_NAME=all
 
 CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
   --model_name_or_path bert-base-cased \

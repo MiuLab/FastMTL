@@ -15,11 +15,13 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        #MODIFY --> change classifier to classifier list
+        #MODIFY --> change classifier to classifier dict
         #self.classifier = nn.Linear(config.hidden_size, config.num_labels)
-        self.classifier_list = {}
+        self.classifier_dict = nn.ModuleDict({})
         for task_name in self.all_task_names:
-            self.classifier_list[task_name] = nn.Linear(config.hidden_size, self.num_labels_dict[task_name]) 
+            self.classifier_dict[task_name] = nn.Linear(config.hidden_size, self.num_labels_dict[task_name]) 
+        #MODIFY --> Init a param called task_name for eval & predict to specify which task it is running
+        self.task_name = None
 
         self.init_weights()
 
@@ -38,8 +40,6 @@ class BertForSequenceClassification(BertPreTrainedModel):
         #MODIFY --> add flag to indicate task
         task_name = None, 
     ):
-        print(task_name)
-        print(input_ids)
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`):
             Labels for computing the sequence classification/regression loss. Indices should be in :obj:`[0, ...,
@@ -65,7 +65,9 @@ class BertForSequenceClassification(BertPreTrainedModel):
         pooled_output = self.dropout(pooled_output)
         #MODIFY --> use correspond classifier
         #logits = self.classifier(pooled_output)
-        logits = self.classifier_list[task_name](pooled_output)
+        if task_name is None:
+            task_name = self.task_name
+        logits = self.classifier_dict[task_name](pooled_output)
 
         #MODIFY --> assign self.num_labels using task_name
         self.num_labels = self.num_labels_dict[task_name]

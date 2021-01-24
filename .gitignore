@@ -1,5 +1,6 @@
 #ignore files
 *~
 #ignore directories
+__pycache__/
 runs/
 results/

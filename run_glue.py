@@ -33,7 +33,7 @@ from transformers import (
     EvalPrediction,
     HfArgumentParser,
     PretrainedConfig,
-    #MODIFY --> use our trainer
+    #Modify --> use custom trainer
     #Trainer,
     TrainingArguments,
     default_data_collator,
@@ -45,8 +45,8 @@ from transformers.trainer_utils import is_main_process
 from modeling_bert import BertForSequenceClassification
 # MODIFY --> Import custom dataset to pach train dataset
 from custom_dataset import *
-#MODIFY --> use our trainer
-from trainer import Trainer
+#MODIFY --> use new trianer
+from custom_trainer import Trainer
 
 #MODIFY --> change order, following the task id order
 task_to_keys = {
@@ -106,7 +106,9 @@ class DataTrainingArguments:
     def __post_init__(self):
         if self.task_name is not None:
             self.task_name = self.task_name.lower()
-            if self.task_name not in task_to_keys.keys():
+            #MODIFY --> enable task_name == all
+            #if self.task_name not in task_to_keys.keys():
+            if self.task_name not in task_to_keys.keys() or self.task_name != "all":
                 raise ValueError("Unknown task, you should pick one in " + ",".join(task_to_keys.keys()))
         elif self.train_file is None or self.validation_file is None:
             raise ValueError("Need either a GLUE task or a training/validation file.")
@@ -224,6 +226,7 @@ def main():
     label_list_list = []
     if data_args.task_name == "all":
         ALL_TASK_NAMES = ["mnli", "rte", "qqp", "qnli", "mrpc", "sst2", "cola", "stsb"]
+        ALL_TASK_NAMES = ["rte", "sst2"]
     else:
         ALL_TASK_NAMES = [data_args.task_name]
     for task_name in ALL_TASK_NAMES:
@@ -421,6 +424,7 @@ def main():
     # Initialize our Trainer
     #MODIFY --> use new dataset to pack train datasets, tokenizer is for the datacollator
     train_dataset_all = MergeDataset(training_args, train_dataset_list, ALL_TASK_NAMES)
+    #MODIFY --> use simple data collator in trainer when training.
     custom_data_collator = CustomDataCollator()
 
     trainer = Trainer(
@@ -433,10 +437,9 @@ def main():
         compute_metrics=compute_metrics,
         tokenizer=tokenizer,
         # Data collator will default to DataCollatorWithPadding, so we change it if we already did the padding.
-        #data_collator=default_data_collator if data_args.pad_to_max_length else None,
-        data_collator=custom_data_collator
-
+        data_collator=default_data_collator if data_args.pad_to_max_length else None,
     )
+    trainer.train_data_collator = custom_data_collator
 
     # Training
     if training_args.do_train:
@@ -458,6 +461,8 @@ def main():
             # Need to save the state, since Trainer.save_model saves only the tokenizer with the model
             trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
 
+    # MODIFY --> 這邊注意的是，Eval 和predict 都是用原本的方法來跑，不像train會用雙層dataloader
+    # MODIFY --> Eval and predict needs "model.task_name to know which task it is running"
     # Evaluation
     eval_results = {}
     if training_args.do_eval:
@@ -466,6 +471,7 @@ def main():
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset in zip(ALL_TASK_NAMES, eval_dataset_list):
             data_args.task_name = task_name
+            trainer.model.task_name = data_args.task_name
             # MODIFY 在這邊get metrics
             # Get the metric function
             if data_args.task_name is not None:
@@ -496,6 +502,7 @@ def main():
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset in zip(ALL_TASK_NAMES, eval_dataset_list):
             data_args.task_name = task_name
+            trainer.model.task_name = data_args.task_name
             # MODIFY 在這邊get metrics
             # Get the metric function
             if data_args.task_name is not None:
