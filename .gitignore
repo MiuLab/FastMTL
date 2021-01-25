@@ -1,6 +1,9 @@
+#ignore files
 models/*
 *~
 results/*
 
-
-
+#ignore directories
+__pycache__/
+runs/
+results/
