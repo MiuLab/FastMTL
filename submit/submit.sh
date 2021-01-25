@@ -1,9 +1,13 @@
 
 
 
+MODEL_NAME="all"
+POSTFIX=0
+FILEDIR="../results/${MODEL_NAME}_${POSTFIX}"
+mkdir $FILEDIR/submission 
+cp WNLI.tsv $FILEDIR/submission/
 
-
-for dataset in `ls ../results`
+for dataset in `cat ./datasets`
 do
     echo $dataset
     Dataname=`echo $dataset | tr '[:lower:]' '[:upper:]'`
@@ -20,21 +24,21 @@ do
         Dataname='MNLI-m'
     fi
     echo "filename= $Dataname"
-    echo "cp ../results/$dataset/test_results_$dataset.txt ./$Dataname.tsv"
-    cp ../results/$dataset/test_results_$dataset.txt ./$Dataname.tsv
-    python3 ../result_proc.py ./$Dataname.tsv
+    echo "cp $FILEDIR/test_results_$dataset.txt $FILEDIR/submission/$Dataname.tsv"
+
+    cp $FILEDIR/test_results_$dataset.txt $FILEDIR/submission/$Dataname.tsv
+    python3 ../result_proc.py $FILEDIR/submission/$Dataname.tsv
 done
 
-cp ../results/mnli/test_results_mnli-mm.txt ./MNLI-mm.tsv
-python3 ../result_proc.py ./MNLI-mm.tsv
+cp $FILEDIR/test_results_mnli-mm.txt $FILEDIR/submission/MNLI-mm.tsv
 
-echo -e "index\tprediction" > ./AX.tsv
+echo -e "index\tprediction" > $FILEDIR/submission/AX.tsv
 for i in {0..1103};
 do
-    echo -e "$i\tentailment" >> ./AX.tsv
+    echo -e "$i\tentailment" >> $FILEDIR/submission/AX.tsv
 done
-
-zip -r submission.zip *.tsv
+cd $FILEDIR/submission/
+zip -r -j ../submission.zip *.tsv
 #rm -f *.tsv
 
 
