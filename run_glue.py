@@ -394,6 +394,8 @@ def main():
         #MODIFY --> don't use cache
         #datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=not data_args.overwrite_cache)
         datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=False)
+        # MODIFY --> Re-assign datasets after mapping
+        datasets_dict[data_args.task_name] = datasets
 
         train_dataset = datasets["train"]
         eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
@@ -480,7 +482,7 @@ def main():
         logger.info("*** Evaluate ***")
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
-        for task_name, eval_dataset in zip(ALL_TASK_NAMES, eval_dataset_list):
+        for task_name, eval_dataset_store in zip(ALL_TASK_NAMES, eval_dataset_list):
             # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
             label_list = label_list_dict[data_args.task_name]
@@ -495,14 +497,13 @@ def main():
                 metric = load_metric("glue", data_args.task_name)
             # Loop to handle MNLI double evaluation (matched, mis-matched)
             tasks = [data_args.task_name]
-            eval_datasets = [eval_dataset]
+            eval_datasets = [eval_dataset_store]
             if data_args.task_name == "mnli":
                 tasks.append("mnli-mm")
                 eval_datasets.append(datasets["validation_mismatched"])
 
             for eval_dataset, task in zip(eval_datasets, tasks):
                 eval_result = trainer.evaluate(eval_dataset=eval_dataset)
-
                 output_eval_file = os.path.join(training_args.output_dir, f"eval_results_{task}.txt")
                 if trainer.is_world_process_zero():
                     with open(output_eval_file, "w") as writer:
