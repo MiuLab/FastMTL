@@ -518,7 +518,7 @@ def main():
         logger.info("*** Test ***")
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
-        for task_name, eval_dataset in zip(ALL_TASK_NAMES, eval_dataset_list):
+        for task_name, test_dataset_store in zip(ALL_TASK_NAMES, test_dataset_list):
             # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
             label_list = label_list_dict[data_args.task_name]
@@ -533,7 +533,7 @@ def main():
                 metric = load_metric("glue", data_args.task_name)
             # Loop to handle MNLI double evaluation (matched, mis-matched)
             tasks = [data_args.task_name]
-            test_datasets = [test_dataset]
+            test_datasets = [test_dataset_store]
             if data_args.task_name == "mnli":
                 tasks.append("mnli-mm")
                 test_datasets.append(datasets["test_mismatched"])
