@@ -1,0 +1,48 @@
+html,body{
+	height: 100%;
+	width: 100%;
+}
+.main_block{
+	position: relative;
+	width: 80%;
+	height: 80%;
+	display: inline-block;
+	margin-left: 18%;
+	margin-top: 10%;
+	padding: 10px;
+	overflow: hidden;
+}
+#myChart{
+	z-index: 10;
+	position: relative;
+	display: block;
+	height: 100%;
+	width: 100%;
+}
+.nav{
+	height: 60px;
+	width: 100%;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	background-color: rgb(10,10,10);
+	display: inline-block;
+}
+#select-model-dropout{
+	position: relative;
+	width: 200px;
+	height: 100%;
+	float: left;
+	margin-left: 1%;
+}
+#select-model-dropout button{
+	z-index: 1000;
+	position: relative;
+	display: block ;
+	height: 40px;
+	margin-top: 10px;
+	background-color: rgba(0,0,0,10);
+}
+.example-dropdown-item{
+	display: none;
+}
