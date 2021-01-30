@@ -1,5 +1,5 @@
 export MODEL_NAME=all
-export POSTFIX=0
+export POSTFIX=random10
 export BATCHSIZE=32
 export TOTAL_EPOCH=10
 export HTDOCS=~/htdocs/plot_scores

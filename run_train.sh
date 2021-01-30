@@ -1,17 +1,20 @@
 export TASK_NAME=all
-export POSTFIX=0
+export POSTFIX=random10
 export BATCHSIZE=32
+export USE_PER=10
+USE_PER=$((100/$USE_PER))
+echo $USE_PER
 
 #need to deal with batch size and steps...
 declare -A DATA
-DATA=( ['mnli']=392702 
-    ['rte']=2490 
-    ['qqp']=363849 
-    ['qnli']=104743 
-    ['mrpc']=3668 
-    ['sst2']=67349 
-    ['cola']=8551 
-    ['stsb']=5749 
+DATA=( ['mnli']=$((392702/$USE_PER))
+    ['rte']=$((2490/$USE_PER))
+    ['qqp']=$((363849/$USE_PER)) 
+    ['qnli']=$((104743/$USE_PER)) 
+    ['mrpc']=$((3668/$USE_PER)) 
+    ['sst2']=$((67349/$USE_PER)) 
+    ['cola']=$((8551/$USE_PER)) 
+    ['stsb']=$((5749/$USE_PER)) 
     ['all']=0 )
 
 #Data num
@@ -40,11 +43,13 @@ CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
   --do_eval \
   --fp16 \
   --max_seq_length 128 \
+  --seed 13 \
   --per_device_train_batch_size $BATCHSIZE \
   --per_device_eval_batch_size 128 \
   --save_steps $SAVE_STEPS \
   --learning_rate 2e-5 \
   --num_train_epochs 5 \
+  --use_data_percent $USE_PER \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/
 
 #Need to do this incase that the trainer load the state in finetuning for continue training

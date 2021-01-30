@@ -102,6 +102,17 @@ class DataTrainingArguments:
         default=None, metadata={"help": "A csv or a json file containing the validation data."}
     )
     test_file: Optional[str] = field(default=None, metadata={"help": "A csv or a json file containing the test data."})
+    #MODIFY --> add argument for using percent of data
+    use_data_percent: int = field(
+        default=100,
+        metadata={
+            "help": "The percent of data to use, if no load_data_rank is specified, use random"
+        },
+    )
+    load_data_rank: Optional[str] = field(
+        default=None,
+        metadata={"help": "The rank file"}
+    )
 
     def __post_init__(self):
         if self.task_name is not None:
@@ -398,6 +409,15 @@ def main():
         datasets_dict[data_args.task_name] = datasets
 
         train_dataset = datasets["train"]
+        #MODIFY --> add use percent of data
+        if data_args.use_data_percent < 100:
+            #The setting will match the setting in shell script, use two divide with floor...
+            use_percent_div = 100//data_args.use_data_percent
+            use_datanum = len(train_dataset)//use_percent_div
+            if data_args.load_data_rank is None: #Use random
+                train_dataset = train_dataset.select(random.sample(range(0, len(train_dataset)), use_datanum))
+
+
         eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
         if data_args.task_name is not None or data_args.test_file is not None:
             test_dataset = datasets["test_matched" if data_args.task_name == "mnli" else "test"]
