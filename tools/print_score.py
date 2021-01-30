@@ -50,15 +50,15 @@ def copy_txt(from_file, to_file):
     with open(to_file,"w") as F:
         F.writelines(data)
 
-def mv_score_to_best_dir(args, result_dir, best_dir, best_epoch):
+def mv_test_to_best_dir(args, result_dir, best_dir, best_epoch):
     for idx, (task, metrics) in enumerate(ALL_TASK_METRICS.items()):
         epoch_dir = os.path.join(result_dir, "FINETUNE_{}_E{}".format(args.model_name, best_epoch[idx]))
-        from_file = os.path.join(epoch_dir,"eval_results_{}.txt").format(task)
-        to_file = os.path.join(best_dir,"eval_results_{}.txt").format(task)
+        from_file = os.path.join(epoch_dir,"test_results_{}.txt").format(task)
+        to_file = os.path.join(best_dir,"test_results_{}.txt").format(task)
         copy_txt(from_file, to_file)
         if task == "mnli":
-            from_file = os.path.join(epoch_dir,"eval_results_{}.txt").format(task + "-mm")
-            to_file = os.path.join(best_dir,"eval_results_{}.txt").format(task + "-mm")
+            from_file = os.path.join(epoch_dir,"test_results_{}.txt").format(task + "-mm")
+            to_file = os.path.join(best_dir,"test_results_{}.txt").format(task + "-mm")
             copy_txt(from_file, to_file)
 
 def main():
@@ -72,8 +72,6 @@ def main():
                                 help='When the --finetune is set, the script requires the max epoch num.')
     parser.add_argument('--best_dir', action='store_true',
                                 help='if set, create a dir to put all best files')
-    parser.add_argument('--plot', action='store_true',
-                                help='if set, plot the image of the finetune results.')
     args = parser.parse_args()
     #results are store in './results/'
     result_dir ="./results/"
@@ -115,7 +113,7 @@ def main():
         if args.best_dir:
             if not os.path.isdir(best_dir):
                 os.mkdir( best_dir);
-            mv_score_to_best_dir(args, result_dir, best_dir, best_scores["best_epoch"])
+            mv_test_to_best_dir(args, result_dir, best_dir, best_scores["best_epoch"])
             #JSON file for best scores
             best_scores_json = os.path.join(best_dir, "best_scores.json")
             with open(best_scores_json,"w") as F:

@@ -1,9 +1,12 @@
-
-
-
-MODEL_NAME="all"
-POSTFIX=0
+MODEL_NAME=$1
+POSTFIX=$2
+FINETUNE=$3
+#Default, if not doing finetune
 FILEDIR="../results/${MODEL_NAME}_${POSTFIX}"
+if [ "$FINETUNE" = "Y" ]
+then
+    FILEDIR="../results/FINETUNE_${MODEL_NAME}_${POSTFIX}_BEST"
+fi
 mkdir $FILEDIR/submission 
 cp WNLI.tsv $FILEDIR/submission/
 
