@@ -43,6 +43,24 @@ html,body{
 	margin-top: 10px;
 	background-color: rgba(0,0,0,10);
 }
+.download-btn-container{
+	position: relative;
+	width: 200px;
+	height: 100%;
+	float: right;
+	margin-right: 1%;
+}
+.download-btn{
+	z-index: 1000;
+	position: relative;
+    float right;
+	display: block ;
+	height: 40px;
+    width 150px;
+	margin-top: 10px;
+	background-color: rgba(100,100,100,0);
+    border 0px;
+}
 .example-dropdown-item{
 	display: none;
 }

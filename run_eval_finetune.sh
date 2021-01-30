@@ -1,7 +1,7 @@
-export MODEL_NAME=all
-export POSTFIX=0
-export BATCHSIZE=32
-export TOTAL_EPOCH=10
+export MODEL_NAME=$1
+export POSTFIX=$2
+export BATCHSIZE=$3
+export TOTAL_EPOCH=$4
 
 declare -A DATA
 DATA=( ['mnli']=392702 

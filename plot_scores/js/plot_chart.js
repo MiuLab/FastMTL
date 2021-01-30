@@ -5,6 +5,8 @@ function reset_chart(){
 }
 function get_score_file(event) {
 	reset_chart();
+    // set download btn
+    $(".download-btn").attr("href",event.data.zip_name);
 	$.getJSON(event.data.file_name, function(data) {
 		all_scores = data['all_scores']
 		plot_chart(all_scores);
