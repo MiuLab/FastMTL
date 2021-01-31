@@ -45,7 +45,7 @@ do
       --do_predict \
       --fp16 \
       --max_seq_length 128 \
-      --per_device_eval_batch_size 128 \
+      --per_device_eval_batch_size 256 \
       --output_dir ./results/FINETUNE_${MODEL_NAME}_${POSTFIX}_E${TOTAL_EPOCH}/
 done
 exit

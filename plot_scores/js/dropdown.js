@@ -1,7 +1,7 @@
 var original_chart=$(".main_block");
 $.get('all_dir_names.txt', function(data) {
    console.log(data);
-   all_dir = data.split(" ");
+   all_dir = data.split("\n");
    $.each( all_dir , function( index, value ) {
         example_item = $(".example-dropdown-item");
         new_item = example_item.clone().removeClass("example-dropdown-item");

@@ -2,6 +2,7 @@
 models/*
 *~
 results/*
+rank_files/*
 
 #ignore directories
 __pycache__/

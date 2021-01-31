@@ -1,7 +1,7 @@
-export TASK_NAME=all
-export POSTFIX=random10
-export BATCHSIZE=32
-export USE_PER=10
+export TASK_NAME=$1
+export POSTFIX=$2
+export BATCHSIZE=$3
+export USE_PER=$4
 USE_PER=$((100/$USE_PER))
 echo $USE_PER
 
