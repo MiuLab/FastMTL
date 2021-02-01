@@ -112,6 +112,12 @@ class DataTrainingArguments:
             "help": "The percent of data to use, if no load_rank_dir is specified, use random"
         },
     )
+    use_data_abs: int = field(
+        default=-1,
+        metadata={
+            "help": "Use absolute data num"
+        },
+    )
     load_rank_dir: Optional[str] = field(
         default=None,
         metadata={"help": "The dir includes rank files"}
@@ -237,6 +243,8 @@ def main():
     # In distributed training, the load_dataset function guarantee that only one local process can concurrently
     # download the dataset.
 
+    #MODIFY --> CHECK use_data_percent and use_data_abs not specify at the same time
+    assert not((data_args.use_data_percent < 100) and (data_args.use_data_abs>0)), "Error, --use_data_percent and --use_data_abs are exclusive args"
     # MODIFY --> get list of dataset, add datasets_dict, num_labels_list, label_list_dict
     # !!! data_args.task_name == "all" 時不適用自己load的dataset(data_args.train_file等)
     datasets_dict = {}
@@ -417,10 +425,13 @@ def main():
 
         train_dataset = datasets["train"]
         #MODIFY --> add use percent of data
-        if data_args.use_data_percent < 100:
+        if (data_args.use_data_percent < 100) or (data_args.use_data_abs > 0):
             #The setting will match the setting in shell script, use two divide with floor...
-            use_percent_div = 100//data_args.use_data_percent
-            use_datanum = len(train_dataset)//use_percent_div
+            if data_args.use_data_percent < 100:
+                use_percent_div = 100//data_args.use_data_percent
+                use_datanum = len(train_dataset)//use_percent_div
+            if data_args.use_data_abs > 0:
+                use_datanum = data_args.use_data_abs
             #use_list
             if data_args.load_rank_dir is None: #Use random
                 use_list = random.sample(range(0, len(train_dataset)), use_datanum)
