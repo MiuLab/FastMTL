@@ -2,24 +2,38 @@ export TASK_NAME=$1
 export POSTFIX=$2
 export BATCHSIZE=$3
 export USE_PER=$4
-export LOAD_RANK_DIR=$5
-export RANK_TYPE=$6
-export CUDA=$7
+export USE_ABS=$5
+export LOAD_RANK_DIR=$6
+export RANK_TYPE=$7
+export CUDA=$8
 
-USE_PER=$((100/$USE_PER))
-echo $USE_PER
+USE_PER_DIV=$((100/$USE_PER))
 
 #need to deal with batch size and steps...
 declare -A DATA
-DATA=( ['mnli']=$((392702/$USE_PER))
-    ['rte']=$((2490/$USE_PER))
-    ['qqp']=$((363849/$USE_PER)) 
-    ['qnli']=$((104743/$USE_PER)) 
-    ['mrpc']=$((3668/$USE_PER)) 
-    ['sst2']=$((67349/$USE_PER)) 
-    ['cola']=$((8551/$USE_PER)) 
-    ['stsb']=$((5749/$USE_PER)) 
+DATA=( ['mnli']=$((392702/$USE_PER_DIV))
+    ['rte']=$((2490/$USE_PER_DIV))
+    ['qqp']=$((363849/$USE_PER_DIV)) 
+    ['qnli']=$((104743/$USE_PER_DIV)) 
+    ['mrpc']=$((3668/$USE_PER_DIV)) 
+    ['sst2']=$((67349/$USE_PER_DIV)) 
+    ['cola']=$((8551/$USE_PER_DIV)) 
+    ['stsb']=$((5749/$USE_PER_DIV)) 
     ['all']=0 )
+
+if [ "$USE_ABS" -gt "0" ]
+then
+	declare -A DATA
+	DATA=( ['mnli']=$USE_ABS
+	    ['rte']=$USE_ABS
+	    ['qqp']=$USE_ABS
+	    ['qnli']=$USE_ABS
+	    ['mrpc']=$USE_ABS
+	    ['sst2']=$USE_ABS
+	    ['cola']=$USE_ABS
+	    ['stsb']=$USE_ABS
+	    ['all']=0 )
+fi
 
 #Data num
 #For not all
@@ -38,6 +52,7 @@ then
     done
 fi
 echo $SAVE_STEPS
+echo $USE_PER
 
 #Run
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
@@ -54,6 +69,7 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --learning_rate 2e-5 \
   --num_train_epochs 5 \
   --use_data_percent $USE_PER \
+  --use_data_abs $USE_ABS \
   --load_rank_dir $LOAD_RANK_DIR \
   --rank_type $RANK_TYPE \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/

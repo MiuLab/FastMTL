@@ -244,6 +244,7 @@ def main():
     # download the dataset.
 
     #MODIFY --> CHECK use_data_percent and use_data_abs not specify at the same time
+    print(data_args.use_data_percent, data_args.use_data_abs)
     assert not((data_args.use_data_percent < 100) and (data_args.use_data_abs>0)), "Error, --use_data_percent and --use_data_abs are exclusive args"
     # MODIFY --> get list of dataset, add datasets_dict, num_labels_list, label_list_dict
     # !!! data_args.task_name == "all" 時不適用自己load的dataset(data_args.train_file等)
