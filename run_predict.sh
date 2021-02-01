@@ -1,8 +1,9 @@
-export MODEL_NAME=all
+export MODEL_NAME=$1
+export POSTFIX=$2
 export TASK_NAME=all
-export POSTFIX=random10
+export CUDA=$3
 
-CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
+CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path ./results/${MODEL_NAME}_${POSTFIX}/ \
   --task_name $TASK_NAME \
   --do_predict \

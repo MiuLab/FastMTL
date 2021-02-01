@@ -47,6 +47,9 @@ from modeling_bert import BertForSequenceClassification
 from custom_dataset import *
 #MODIFY --> use new trianer
 from custom_trainer import Trainer
+#MODIFY --> import json, numpy
+import numpy as np
+import json
 
 #MODIFY --> change order, following the task id order
 task_to_keys = {
@@ -106,12 +109,16 @@ class DataTrainingArguments:
     use_data_percent: int = field(
         default=100,
         metadata={
-            "help": "The percent of data to use, if no load_data_rank is specified, use random"
+            "help": "The percent of data to use, if no load_rank_dir is specified, use random"
         },
     )
-    load_data_rank: Optional[str] = field(
+    load_rank_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "The rank file"}
+        metadata={"help": "The dir includes rank files"}
+    )
+    rank_type: Optional[str] = field(
+        default=None,
+        metadata={"help": "Type of ranking, the key of the rank file"}
     )
 
     def __post_init__(self):
@@ -414,8 +421,22 @@ def main():
             #The setting will match the setting in shell script, use two divide with floor...
             use_percent_div = 100//data_args.use_data_percent
             use_datanum = len(train_dataset)//use_percent_div
-            if data_args.load_data_rank is None: #Use random
-                train_dataset = train_dataset.select(random.sample(range(0, len(train_dataset)), use_datanum))
+            #use_list
+            if data_args.load_rank_dir is None: #Use random
+                use_list = random.sample(range(0, len(train_dataset)), use_datanum)
+            else: #use rank
+                rank_file = os.path.join(data_args.load_rank_dir, "{}_rank.json".format(data_args.task_name)) 
+                with open(rank_file, "r") as F:
+                    ranking = json.load(F)
+                use_rank = np.array(ranking[data_args.rank_type])
+                #From small to big
+                use_rank_argmax = np.argsort(use_rank) 
+                use_list = use_rank_argmax[len(train_dataset)-use_datanum:].tolist()
+                print("use rank(first 10): ", use_list[:10])
+                print("rank list(first 10, should be accending): ", [use_rank[i] for i in use_list[:10]])
+            #CHECK use_list unique
+            assert len(use_list) == len(set(use_list)), "ERROR, use_list is not unique...."
+            train_dataset = train_dataset.select(use_list)
 
 
         eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]

@@ -1,7 +1,8 @@
 export TASK_NAME=$1
-export MODEL_NAME=all
-export POSTFIX=random10
-export BATCHSIZE=32
+export MODEL_NAME=$2
+export POSTFIX=$3
+export BATCHSIZE=$4
+export CUDA=$5
 export USE_PER=100
 USE_PER=$((100/$USE_PER))
 echo $USE_PER
@@ -15,8 +16,7 @@ DATA=( ['mnli']=$((392702/$USE_PER))
     ['mrpc']=$((3668/$USE_PER)) 
     ['sst2']=$((67349/$USE_PER)) 
     ['cola']=$((8551/$USE_PER)) 
-    ['stsb']=$((5749/$USE_PER)) 
-    ['all']=0 )
+    ['stsb']=$((5749/$USE_PER)) )
 
 #Data num
 #For not all
@@ -37,7 +37,7 @@ fi
 echo $SAVE_STEPS
 
 #Run
-CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
+CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path results/${MODEL_NAME}_$POSTFIX/ \
   --task_name $TASK_NAME \
   --do_train \

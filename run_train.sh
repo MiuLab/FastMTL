@@ -2,6 +2,10 @@ export TASK_NAME=$1
 export POSTFIX=$2
 export BATCHSIZE=$3
 export USE_PER=$4
+export LOAD_RANK_DIR=$5
+export RANK_TYPE=$6
+export CUDA=$7
+
 USE_PER=$((100/$USE_PER))
 echo $USE_PER
 
@@ -36,7 +40,7 @@ fi
 echo $SAVE_STEPS
 
 #Run
-CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
+CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path bert-base-cased \
   --task_name $TASK_NAME \
   --do_train \
@@ -50,6 +54,8 @@ CUDA_VISIBLE_DEVICES=1 python3 run_glue.py \
   --learning_rate 2e-5 \
   --num_train_epochs 5 \
   --use_data_percent $USE_PER \
+  --load_rank_dir $LOAD_RANK_DIR \
+  --rank_type $RANK_TYPE \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/
 
 #Need to do this incase that the trainer load the state in finetuning for continue training
