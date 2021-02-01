@@ -11,12 +11,12 @@ export CUDA=0
 
 ./run_train.sh $TASK_NAME $POSTFIX $BATCHSIZE $USE_PER $USE_ABS $LOAD_RANK_DIR $RANK_TYPE $CUDA
 wait
-#./run_predict.sh $TASK_NAME $POSTFIX $CUDA
+./run_predict.sh $TASK_NAME $POSTFIX $CUDA
 wait
-#cd submit
-#./submit.sh $TASK_NAME $POSTFIX n
+cd submit
+./submit.sh $TASK_NAME $POSTFIX n
 wait
-#cd ..
-#./run_all_finetune.sh $TASK_NAME $POSTFIX $BATCHSIZE $CUDA
+cd ..
+./run_all_finetune.sh $TASK_NAME $POSTFIX $BATCHSIZE $CUDA
 wait
-#./post_pipeline.sh $TASK_NAME $POSTFIX $BATCHSIZE $CUDA
+./post_pipeline.sh $TASK_NAME $POSTFIX $BATCHSIZE $CUDA

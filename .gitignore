@@ -3,6 +3,8 @@ models/*
 *~
 results/*
 rank_files/*
+a.sh
+b.sh
 
 #ignore directories
 __pycache__/

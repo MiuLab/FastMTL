@@ -434,7 +434,7 @@ def main():
             if data_args.use_data_abs > 0:
                 use_datanum = data_args.use_data_abs
             #use_list
-            if data_args.load_rank_dir is None: #Use random
+            if (data_args.load_rank_dir is None) or (data_args.load_rank_dir=="None"): #Use random
                 use_list = random.sample(range(0, len(train_dataset)), use_datanum)
             else: #use rank
                 rank_file = os.path.join(data_args.load_rank_dir, "{}_rank.json".format(data_args.task_name)) 
