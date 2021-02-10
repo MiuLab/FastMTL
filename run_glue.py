@@ -50,6 +50,9 @@ from custom_trainer import Trainer
 #MODIFY --> import json, numpy
 import numpy as np
 import json
+#MODIFY --> import bert hiddenstate visualization
+from vis_hidden import *
+
 
 #MODIFY --> change order, following the task id order
 task_to_keys = {
@@ -125,6 +128,22 @@ class DataTrainingArguments:
     rank_type: Optional[str] = field(
         default=None,
         metadata={"help": "Type of ranking, the key of the rank file"}
+    )
+    vis_hidden: Optional[bool] = field(
+        default=False,
+        metadata={"help" : "When doing eval, if want to store hidden img"}
+    )
+    vis_hidden_file: Optional[str] = field(
+        default="vis_hidden.png",
+        metadata={
+            "help" : "When doing eval, if want to store hidden img, specify the store file name"
+        }
+    )
+    vis_hidden_num: Optional[int] = field(
+        default=-1,
+        metadata={
+            "help" : "When doing eval, if want to store hidden img, specify the show datanum"
+        }
     )
 
     def __post_init__(self):
@@ -418,9 +437,9 @@ def main():
             if label_to_id is not None and "label" in examples:
                 result["label"] = [label_to_id[l] for l in examples["label"]]
             return result
-        #MODIFY --> don't use cache
-        #datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=not data_args.overwrite_cache)
-        datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=False)
+        #MODIFY --> use cache
+        datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=not data_args.overwrite_cache)
+        #datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=False)
         # MODIFY --> Re-assign datasets after mapping
         datasets_dict[data_args.task_name] = datasets
 
@@ -533,6 +552,16 @@ def main():
     eval_results = {}
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
+        # MODIFY--> to vis hidden, tell model
+        if data_args.vis_hidden:
+            trainer.model.vis_hidden=True
+            #INIT task hidden state dict
+            trainer.model.tasks_hs_dict={}
+            for task_name in ALL_TASK_NAMES:
+                trainer.model.tasks_hs_dict[task_name]=[]
+            all_hidden_states = []
+            all_y=[]
+            cnt_task_for_vis_hid = 0
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset_store in zip(ALL_TASK_NAMES, eval_dataset_list):
@@ -566,6 +595,18 @@ def main():
                             writer.write(f"{key} = {value}\n")
 
                 eval_results.update(eval_result)
+            #MODIFY -> VIS HIDDEN
+            if data_args.vis_hidden:
+                if data_args.vis_hidden_num <= 0:
+                    all_hidden_states += trainer.model.tasks_hs_dict[task_name]
+                    all_y += [cnt_task_for_vis_hid] * len(trainer.model.tasks_hs_dict[task_name])
+                else:
+                    all_hidden_states += trainer.model.tasks_hs_dict[task_name][:data_args.vis_hidden_num]
+                    all_y += [cnt_task_for_vis_hid] * len(trainer.model.tasks_hs_dict[task_name][:data_args.vis_hidden_num])
+                cnt_task_for_vis_hid += 1
+        if data_args.vis_hidden:
+            all_hidden_states = np.array([i.numpy() for i in all_hidden_states])
+            vis_hidden(all_hidden_states,all_y,data_args.vis_hidden_file, ALL_TASK_NAMES)
 
     if training_args.do_predict:
         logger.info("*** Test ***")

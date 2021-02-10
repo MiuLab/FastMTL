@@ -72,6 +72,8 @@ def main():
                                 help='When the --finetune is set, the script requires the max epoch num.')
     parser.add_argument('--best_dir', action='store_true',
                                 help='if set, create a dir to put all best files')
+    parser.add_argument('--mv_test', action='store_true',
+                                help='if set, mv test file to best dir')
     args = parser.parse_args()
     #results are store in './results/'
     result_dir ="./results/"
@@ -113,11 +115,18 @@ def main():
         if args.best_dir:
             if not os.path.isdir(best_dir):
                 os.mkdir( best_dir);
-            mv_test_to_best_dir(args, result_dir, best_dir, best_scores["best_epoch"])
+            if args.mv_test:
+                mv_test_to_best_dir(args, result_dir, best_dir, best_scores["best_epoch"])
             #JSON file for best scores
             best_scores_json = os.path.join(best_dir, "best_scores.json")
             with open(best_scores_json,"w") as F:
                 json.dump(best_scores, F)
+            #Best epoch is for the shell script to load and run predict
+            best_epoch_txt = os.path.join(best_dir, "best_epoch.txt")
+            with open(best_epoch_txt,"w") as F:
+                F.writelines("\n".join([str(x) for x in best_scores['best_epoch']])+"\n")
+
+
         
 
 

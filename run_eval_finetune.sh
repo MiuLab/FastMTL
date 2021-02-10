@@ -15,8 +15,7 @@ DATA=( ['mnli']=$((392702/$USE_PER_DIV))
     ['mrpc']=$((3668/$USE_PER_DIV)) 
     ['sst2']=$((67349/$USE_PER_DIV)) 
     ['cola']=$((8551/$USE_PER_DIV)) 
-    ['stsb']=$((5749/$USE_PER_DIV)) 
-    ['all']=0 )
+    ['stsb']=$((5749/$USE_PER_DIV)))
 
 ceildiv(){ echo $((($1+$2-1)/$2)); }
 
@@ -31,10 +30,9 @@ do
           --model_name_or_path ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}_${POSTFIX}/checkpoint-${check_steps}/ \
           --task_name $TASK_NAME \
           --do_eval \
-          --do_predict \
           --fp16 \
           --max_seq_length 128 \
-          --per_device_eval_batch_size 128 \
+          --per_device_eval_batch_size 512 \
           --output_dir ./results/FINETUNE_${MODEL_NAME}_${POSTFIX}_E${epoch}/
     done
     wait
@@ -42,10 +40,9 @@ do
       --model_name_or_path ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}_${POSTFIX}/ \
       --task_name $TASK_NAME \
       --do_eval \
-      --do_predict \
       --fp16 \
       --max_seq_length 128 \
-      --per_device_eval_batch_size 256 \
+      --per_device_eval_batch_size 512 \
       --output_dir ./results/FINETUNE_${MODEL_NAME}_${POSTFIX}_E${TOTAL_EPOCH}/
 done
 exit

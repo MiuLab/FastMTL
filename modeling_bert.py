@@ -22,6 +22,8 @@ class BertForSequenceClassification(BertPreTrainedModel):
             self.classifier_dict[task_name] = nn.Linear(config.hidden_size, self.num_labels_dict[task_name]) 
         #MODIFY --> Init a param called task_name for eval & predict to specify which task it is running
         self.task_name = None
+        #MODIFY --> for vis_hidden
+        self.vis_hidden=False
 
         self.init_weights()
 
@@ -59,13 +61,17 @@ class BertForSequenceClassification(BertPreTrainedModel):
             return_dict=return_dict,
         )
 
-        pooled_output = outputs[1]
-
-        pooled_output = self.dropout(pooled_output)
         #MODIFY --> use correspond classifier
         #logits = self.classifier(pooled_output)
         if task_name is None:
             task_name = self.task_name
+
+        pooled_output = outputs[1]
+        #For vis hidden
+        if self.vis_hidden:
+            self.tasks_hs_dict[task_name] += [o.clone().detach().cpu() for o in pooled_output]
+
+        pooled_output = self.dropout(pooled_output)
         logits = self.classifier_dict[task_name](pooled_output)
 
         #MODIFY --> assign self.num_labels using task_name

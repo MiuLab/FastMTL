@@ -3,10 +3,12 @@ models/*
 *~
 results/*
 rank_files/*
+test.py
 a.sh
 b.sh
 
 #ignore directories
 __pycache__/
 runs/
+figure/
 results/

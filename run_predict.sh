@@ -8,5 +8,5 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --task_name $TASK_NAME \
   --do_predict \
   --max_seq_length 128 \
-  --per_device_eval_batch_size 128 \
+  --per_device_eval_batch_size 512 \
   --output_dir ./results/${MODEL_NAME}_${POSTFIX}/
