@@ -1,7 +1,7 @@
 export MODEL_NAME=all
 export TASK_NAME=all
-export POSTFIX=mlm_lossAbs1000
-export SHOWNUM=1000
+export POSTFIX=test
+export SHOWNUM=2000
 
 if [ "$SHOWNUM" = "-1" ]
 then

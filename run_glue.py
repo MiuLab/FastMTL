@@ -145,6 +145,10 @@ class DataTrainingArguments:
             "help" : "When doing eval, if want to store hidden img, specify the show datanum"
         }
     )
+    train_task_disc: Optional[bool] = field(
+        default=False,
+        metadata={"help" : "Only specify this in training mode, if specified, train task_discriminator"}
+    )
 
     def __post_init__(self):
         if self.task_name is not None:
@@ -352,6 +356,7 @@ def main():
     #MODIFY --> add num labels list and all task names
     config.num_labels_dict = num_labels_dict
     config.all_task_names = ALL_TASK_NAMES
+    config.train_task_disc = data_args.train_task_disc
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -370,6 +375,8 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
+    #Update some args, such as vis_hidden and train_task_disc
+    model.update_args(data_args)
 
     # MODIFY --> make train_dataset_list and test_dataset_list
     train_dataset_list = []

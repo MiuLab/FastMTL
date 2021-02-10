@@ -11,6 +11,7 @@ def vis_hidden(X, y, save_file, y_label):
     save_npy = save_file+".npy"
     '''t-SNE'''
     tsne = TSNE(n_components=2, random_state=501, verbose=1)
+    print(X.shape)
     X_tsne = tsne.fit_transform(X)
      
     print("Org data dimension is {}. Embedded data dimension is {}".format(X.shape[-1], X_tsne.shape[-1]))

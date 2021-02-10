@@ -6,6 +6,8 @@ export USE_ABS=$5
 export LOAD_RANK_DIR=$6
 export RANK_TYPE=$7
 export CUDA=$8
+export SHOWNUM=2000
+export TRAIN_TASK_DISC=$9
 
 USE_PER_DIV=$((100/$USE_PER))
 
@@ -70,7 +72,11 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --num_train_epochs 5 \
   --use_data_percent $USE_PER \
   --use_data_abs $USE_ABS \
+  --vis_hidden \
+  --vis_hidden_file figure/$POSTFIX \
+  --vis_hidden_num $SHOWNUM \
   --load_rank_dir $LOAD_RANK_DIR \
+  $TRAIN_TASK_DISC \
   --rank_type $RANK_TYPE \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/
 

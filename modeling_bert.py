@@ -24,8 +24,20 @@ class BertForSequenceClassification(BertPreTrainedModel):
         self.task_name = None
         #MODIFY --> for vis_hidden
         self.vis_hidden=False
+        #MODIFY --> For task discriminator
+        self.train_task_disc = config.train_task_disc
+        if self.train_task_disc:
+            self.task_discriminator = nn.Linear(config.hidden_size, len(self.all_task_names))
+            self.name_to_id = {}
+            for i, name in enumerate(self.all_task_names):
+                self.name_to_id[name] = i
 
         self.init_weights()
+    #MODIFY--> MAKE sure things go with the data_args
+    def update_args(self, data_args):
+        self.train_task_disc = data_args.train_task_disc
+        self.vis_hidden = data_args.vis_hidden
+
 
     def forward(
         self,
@@ -40,7 +52,7 @@ class BertForSequenceClassification(BertPreTrainedModel):
         output_hidden_states=None,
         return_dict=None,
         #MODIFY --> add flag to indicate task
-        task_name = None, 
+        task_name = None,
     ):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`):
@@ -68,11 +80,12 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
         pooled_output = outputs[1]
         #For vis hidden
-        if self.vis_hidden:
+        if self.vis_hidden and (not self.training):#eval or predict
             self.tasks_hs_dict[task_name] += [o.clone().detach().cpu() for o in pooled_output]
 
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier_dict[task_name](pooled_output)
+
 
         #MODIFY --> assign self.num_labels using task_name
         self.num_labels = self.num_labels_dict[task_name]
@@ -85,6 +98,16 @@ class BertForSequenceClassification(BertPreTrainedModel):
             else:
                 loss_fct = CrossEntropyLoss()
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+
+        #For train_task_disc, joint loss
+        if self.train_task_disc and (labels is not None):
+            task_disc_labels = torch.LongTensor([self.name_to_id[task_name]]*logits.size(0)).to(logits.device)
+            task_disc_logits = self.task_discriminator(pooled_output)
+            task_disc_loss_fct = CrossEntropyLoss()
+            task_disc_loss = task_disc_loss_fct(task_disc_logits, task_disc_labels)
+            loss += task_disc_loss
+
+
 
         if not return_dict:
             output = (logits,) + outputs[2:]
