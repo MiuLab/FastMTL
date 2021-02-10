@@ -3,6 +3,8 @@ models/*
 *~
 results/*
 rank_files/*
+figure/*.png
+figure/*.npy
 test.py
 a.sh
 b.sh
@@ -10,5 +12,4 @@ b.sh
 #ignore directories
 __pycache__/
 runs/
-figure/
 results/
