@@ -24,19 +24,25 @@ class BertForSequenceClassification(BertPreTrainedModel):
         self.task_name = None
         #MODIFY --> for vis_hidden
         self.vis_hidden=False
+        #MODIFY --> for pred_task
+        self.do_predict_task=False
         #MODIFY --> For task discriminator
         self.train_task_disc = config.train_task_disc
-        if self.train_task_disc:
-            self.task_discriminator = nn.Linear(config.hidden_size, len(self.all_task_names))
-            self.name_to_id = {}
-            for i, name in enumerate(self.all_task_names):
-                self.name_to_id[name] = i
+        self.task_discriminator = nn.Linear(config.hidden_size, len(self.all_task_names))
+        self.name_to_id = {}
+        for i, name in enumerate(self.all_task_names):
+            self.name_to_id[name] = i
+
+        #MODIFY --> init ignore_list = []
+        self.ignore_list = []
+
 
         self.init_weights()
     #MODIFY--> MAKE sure things go with the data_args
     def update_args(self, data_args):
         self.train_task_disc = data_args.train_task_disc
-        self.vis_hidden = data_args.vis_hidden
+        self.vis_hidden = False
+        self.do_predict_task=False
 
 
     def forward(
@@ -84,6 +90,9 @@ class BertForSequenceClassification(BertPreTrainedModel):
             self.tasks_hs_dict[task_name] += [o.clone().detach().cpu() for o in pooled_output]
 
         pooled_output = self.dropout(pooled_output)
+        if self.do_predict_task:# return predict task
+            sigmoid = torch.nn.Sigmoid()
+            return sigmoid(self.task_discriminator(pooled_output))
         logits = self.classifier_dict[task_name](pooled_output)
 
 
@@ -101,11 +110,20 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
         #For train_task_disc, joint loss
         if self.train_task_disc and (labels is not None):
-            task_disc_labels = torch.LongTensor([self.name_to_id[task_name]]*logits.size(0)).to(logits.device)
+            #task_disc_labels = torch.LongTensor([self.name_to_id[task_name]]*logits.size(0)).to(logits.device)
+            task_label_onehot = torch.zeros((pooled_output.size(0),len(self.all_task_names))).to(logits.device)
+            task_label_scatter = torch.LongTensor([[self.name_to_id[task_name]]]*logits.size(0)).to(logits.device)
+            task_disc_labels = task_label_onehot.scatter_(1, task_label_scatter, 1).to(logits.device)
             task_disc_logits = self.task_discriminator(pooled_output)
-            task_disc_loss_fct = CrossEntropyLoss()
+            #task_disc_loss_fct = CrossEntropyLoss()
+            task_disc_loss_fct = torch.nn.BCEWithLogitsLoss(pos_weight=self.task_disc_pos_weight.to(logits.device))
             task_disc_loss = task_disc_loss_fct(task_disc_logits, task_disc_labels)
             loss += task_disc_loss
+        
+        #MODIFY --> if task in ignore list, ignore it in training, loss = 0
+        if task_name in self.ignore_list:
+            loss += -loss # set to zero loss
+            print("Set Loss to 0: ", loss)
 
 
 

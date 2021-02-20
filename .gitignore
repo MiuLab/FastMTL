@@ -8,6 +8,7 @@ figure/*.npy
 test.py
 a.sh
 b.sh
+test0.sh
 
 #ignore directories
 __pycache__/

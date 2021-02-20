@@ -142,12 +142,22 @@ class DataTrainingArguments:
     vis_hidden_num: Optional[int] = field(
         default=-1,
         metadata={
-            "help" : "When doing eval, if want to store hidden img, specify the show datanum"
+            "help" : "If train_dataset isn;t 100, use unused, else use eval. To store hidden img, specify the show datanum"
         }
     )
     train_task_disc: Optional[bool] = field(
         default=False,
         metadata={"help" : "Only specify this in training mode, if specified, train task_discriminator"}
+    )
+    do_predict_task: Optional[bool] = field(
+        default=False,
+        metadata={"help" : "If train_dataset isn;t 100, use unused, else use eval. If predict task type"}
+    )
+    mtdnn_target_task: Optional[str] = field(
+        default=None,
+        metadata={
+            "help" : "if want to train the mtdnn with a target task"
+        }
     )
 
     def __post_init__(self):
@@ -375,13 +385,18 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
-    #Update some args, such as vis_hidden and train_task_disc
+    #Update some args, such as vis_hidden=None and train_task_disc
     model.update_args(data_args)
 
     # MODIFY --> make train_dataset_list and test_dataset_list
     train_dataset_list = []
+    unused_idx_list = []
+    unused_train_dataset_list = []
     eval_dataset_list = [] 
     test_dataset_list = [] 
+    task_use_dict = {} 
+    #when data_args.mtdnn_target_task is set
+    ignore_list = []
     for task_name in ALL_TASK_NAMES:
         # ----------------------------------------- set param start -----------------------------------------
         data_args.task_name = task_name
@@ -451,6 +466,10 @@ def main():
         datasets_dict[data_args.task_name] = datasets
 
         train_dataset = datasets["train"]
+        eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
+        #MODIFY--> Init unused dataset ausing eval dataset
+        unused_train_dataset = eval_dataset
+        unused_list = [-1]
         #MODIFY --> add use percent of data
         if (data_args.use_data_percent < 100) or (data_args.use_data_abs > 0):
             #The setting will match the setting in shell script, use two divide with floor...
@@ -466,27 +485,51 @@ def main():
                 rank_file = os.path.join(data_args.load_rank_dir, "{}_rank.json".format(data_args.task_name)) 
                 with open(rank_file, "r") as F:
                     ranking = json.load(F)
-                use_rank = np.array(ranking[data_args.rank_type])
-                #From small to big
-                use_rank_argmax = np.argsort(use_rank) 
-                use_list = use_rank_argmax[len(train_dataset)-use_datanum:].tolist()
+                if data_args.mtdnn_target_task is not None: #use target task rank
+                    if task_name == data_args.mtdnn_target_task:#the target task    
+                        #use all
+                        use_list = [i for i in range(len(train_dataset))]
+                    else: #other task
+                        print(ranking.keys())
+                        use_rank = ranking["for_"+data_args.mtdnn_target_task+"_rank"]
+                        # the rank here is revers, we use the smallest rank
+                        # we use the use_data_abs, the rank start from 1, so we use <=
+                        use_list = []
+                        for idx, rank in enumerate(use_rank):
+                            if rank > 0 and rank <= data_args.use_data_abs: # The used(trained) rank will be -1 
+                                use_list.append(idx)
+                else:
+                    #From small to big, forr bert, gpt2, merge ranks
+                    use_rank = np.array(ranking[data_args.rank_type])
+                    use_rank_argmax = np.argsort(use_rank) 
+                    use_list = use_rank_argmax[len(train_dataset)-use_datanum:].tolist()
                 print("use rank(first 10): ", use_list[:10])
                 print("rank list(first 10, should be accending): ", [use_rank[i] for i in use_list[:10]])
             #CHECK use_list unique
             assert len(use_list) == len(set(use_list)), "ERROR, use_list is not unique...."
+            unused_list = list(set([i for i in range(len(train_dataset))])-set(use_list))
+            if len(unused_list) ==0:#handel exception, have at least 1 data
+                unused_list = [0]
+            if len(use_list) ==0:#handel exception, have at least 1 data
+                use_list = [0]
+                ignore_list.append(data_args.task_name)
+            unused_train_dataset = train_dataset.select(unused_list)
             train_dataset = train_dataset.select(use_list)
 
 
-        eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
+
+
         if data_args.task_name is not None or data_args.test_file is not None:
             test_dataset = datasets["test_matched" if data_args.task_name == "mnli" else "test"]
 
         # Log a few random samples from the training set:
-        for index in random.sample(range(len(train_dataset)), 3):
-            logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
+        #for index in random.sample(range(len(train_dataset)), 3):
+        #    logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
         
         #MODIFY --> append datasets
         train_dataset_list.append(train_dataset)
+        unused_train_dataset_list.append(unused_train_dataset)
+        unused_idx_list.append(unused_list)
         eval_dataset_list.append(eval_dataset)
         test_dataset_list.append(test_dataset)
 
@@ -516,8 +559,23 @@ def main():
     # Initialize our Trainer
     #MODIFY --> use new dataset to pack train datasets, tokenizer is for the datacollator
     train_dataset_all = MergeDataset(training_args, train_dataset_list, ALL_TASK_NAMES)
+    #if save each epoch, training_args.save_steps = -1
+    if training_args.save_steps == -1:
+        training_args.save_steps = len(train_dataset_all)
     #MODIFY --> use simple data collator in trainer when training.
     custom_data_collator = CustomDataCollator()
+    #MODIFY --> For task disc, get pos weight
+    model.task_disc_pos_weight = train_dataset_all.get_task_disc_pos_weight()
+    #MODIFY--> set ignore
+    if data_args.mtdnn_target_task is not None:
+        #ignore those empty task
+        model.ignore_list = ignore_list
+        print(ignore_list)
+        for task_name, train_dataset in zip(ALL_TASK_NAMES, train_dataset_list):
+            dat_num = len(train_dataset)
+            if task_name in ignore_list:
+                dat_num = 0
+            print("[{}] -- used data: {}".format(task_name, dat_num))
 
     trainer = Trainer(
         model=model,
@@ -555,23 +613,16 @@ def main():
 
     # MODIFY --> 這邊注意的是，Eval 和predict 都是用原本的方法來跑，不像train會用雙層dataloader
     # MODIFY --> Eval and predict needs "model.task_name to know which task it is running"
+
     # Evaluation
     eval_results = {}
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
-        # MODIFY--> to vis hidden, tell model
-        if data_args.vis_hidden:
-            trainer.model.vis_hidden=True
-            #INIT task hidden state dict
-            trainer.model.tasks_hs_dict={}
-            for task_name in ALL_TASK_NAMES:
-                trainer.model.tasks_hs_dict[task_name]=[]
-            all_hidden_states = []
-            all_y=[]
-            cnt_task_for_vis_hid = 0
-
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset_store in zip(ALL_TASK_NAMES, eval_dataset_list):
+            if data_args.mtdnn_target_task is not None:
+                if task_name != data_args.mtdnn_target_task:
+                    continue #skip
             # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
             label_list = label_list_dict[data_args.task_name]
@@ -602,24 +653,16 @@ def main():
                             writer.write(f"{key} = {value}\n")
 
                 eval_results.update(eval_result)
-            #MODIFY -> VIS HIDDEN
-            if data_args.vis_hidden:
-                if data_args.vis_hidden_num <= 0:
-                    all_hidden_states += trainer.model.tasks_hs_dict[task_name]
-                    all_y += [cnt_task_for_vis_hid] * len(trainer.model.tasks_hs_dict[task_name])
-                else:
-                    all_hidden_states += trainer.model.tasks_hs_dict[task_name][:data_args.vis_hidden_num]
-                    all_y += [cnt_task_for_vis_hid] * len(trainer.model.tasks_hs_dict[task_name][:data_args.vis_hidden_num])
-                cnt_task_for_vis_hid += 1
-        if data_args.vis_hidden:
-            all_hidden_states = np.array([i.numpy() for i in all_hidden_states])
-            vis_hidden(all_hidden_states,all_y,data_args.vis_hidden_file, ALL_TASK_NAMES)
+
 
     if training_args.do_predict:
         logger.info("*** Test ***")
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, test_dataset_store in zip(ALL_TASK_NAMES, test_dataset_list):
+            if data_args.mtdnn_target_task is not None:
+                if task_name != data_args.mtdnn_target_task:
+                    continue #skip
             # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
             label_list = label_list_dict[data_args.task_name]
@@ -656,6 +699,57 @@ def main():
                             else:
                                 item = label_list[item]
                                 writer.write(f"{index}\t{item}\n")
+    # MODIFY--> to vis hidden, tell model
+    if data_args.vis_hidden:
+        trainer.model.vis_hidden=True
+        #INIT task hidden state dict
+        trainer.model.tasks_hs_dict={}
+        for task_name in ALL_TASK_NAMES:
+            trainer.model.tasks_hs_dict[task_name]=[]
+        all_hidden_states = []
+        all_y=[]
+        cnt_task_for_vis_hid = 0
+
+    if data_args.do_predict_task:
+        trainer.model.do_predict_task=True
+    if data_args.do_predict_task or data_args.vis_hidden:
+        logger.info("*** Test ***")
+        all_task_pred = {}
+
+        #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
+        for task_name, test_dataset_store, unused_list in zip(ALL_TASK_NAMES, unused_train_dataset_list, unused_idx_list):
+
+            # ----------------------------------------- set param start -----------------------------------------
+            data_args.task_name = task_name
+            datasets = datasets_dict[data_args.task_name]
+            # ----------------------------------------- set param end -----------------------------------------
+            trainer.model.task_name = data_args.task_name
+            tasks = [data_args.task_name]
+            test_dataset = test_dataset_store
+            if test_dataset is None:
+                continue
+            # Removing the `label` columns because it contains -1 and Trainer won't like that.
+            test_dataset.remove_columns_("label")
+            predictions = trainer.predict(test_dataset=test_dataset).predictions
+            all_task_pred[task_name] = {"unused_list": unused_list, "predictions":predictions.tolist()}
+
+
+            #MODIFY -> VIS HIDDEN
+            if data_args.vis_hidden:
+                if data_args.vis_hidden_num <= 0:
+                    all_hidden_states += trainer.model.tasks_hs_dict[task_name]
+                    all_y += [cnt_task_for_vis_hid] * len(trainer.model.tasks_hs_dict[task_name])
+                else:
+                    all_hidden_states += trainer.model.tasks_hs_dict[task_name][:data_args.vis_hidden_num]
+                    all_y += [cnt_task_for_vis_hid] * len(trainer.model.tasks_hs_dict[task_name][:data_args.vis_hidden_num])
+                cnt_task_for_vis_hid += 1
+        if data_args.do_predict_task:
+            output_pred_file = os.path.join(training_args.output_dir, f"task_disc_pred.json")
+            with open(output_pred_file,"w") as F:
+                json.dump(all_task_pred ,F)
+        if data_args.vis_hidden:
+            all_hidden_states = np.array([i.numpy() for i in all_hidden_states])
+            vis_hidden(all_hidden_states,all_y,data_args.vis_hidden_file, ALL_TASK_NAMES)
     return eval_results
 
 

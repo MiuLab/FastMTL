@@ -8,6 +8,8 @@ export RANK_TYPE=$7
 export CUDA=$8
 export SHOWNUM=2000
 export TRAIN_TASK_DISC=$9
+export MTDNN_TARGET_TASK=${10}
+export DO_PREDICT_TASK=${11}
 
 USE_PER_DIV=$((100/$USE_PER))
 
@@ -55,6 +57,7 @@ then
 fi
 echo $SAVE_STEPS
 echo $USE_PER
+SAVE_STEPS=-1
 
 #Run
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
@@ -72,13 +75,16 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --num_train_epochs 5 \
   --use_data_percent $USE_PER \
   --use_data_abs $USE_ABS \
-  --vis_hidden \
-  --vis_hidden_file figure/$POSTFIX \
-  --vis_hidden_num $SHOWNUM \
   --load_rank_dir $LOAD_RANK_DIR \
+  --mtdnn_target_task $MTDNN_TARGET_TASK \
+  $DO_PREDICT_TASK \
   $TRAIN_TASK_DISC \
   --rank_type $RANK_TYPE \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/
+  #--vis_hidden \
+  #--vis_hidden_file figure/$POSTFIX \
+  #--vis_hidden_num $SHOWNUM \
+
 
 #Need to do this incase that the trainer load the state in finetuning for continue training
 #When continue training, modify the trainer_log.json back to trainer_state.json, and the model can continue training

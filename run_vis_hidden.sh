@@ -1,6 +1,6 @@
 export MODEL_NAME=all
 export TASK_NAME=all
-export POSTFIX=test
+export POSTFIX=T0
 export SHOWNUM=2000
 
 if [ "$SHOWNUM" = "-1" ]

@@ -26,6 +26,8 @@ class MergeDataset(Dataset):
         self.init_loaders()
         #data_idx range
         self.dataloader_range = []
+        #task_disc
+        self.task_disc_pos_weight = None
         cnt = 0
         for d_l, task_name in zip(self.dataloader_list, self.all_task_names):
             self.dataloader_range.append(range(cnt,cnt+len(d_l)))
@@ -35,6 +37,13 @@ class MergeDataset(Dataset):
     def __len__(self):
         # len is the sum of max iter of all dataloader
         return sum([len(d_l) for d_l in self.dataloader_list])
+    def get_task_disc_pos_weight(self):
+        if self.task_disc_pos_weight is None:
+            all_num = sum([len(d_l) for d_l in self.dataloader_list])
+            self.task_disc_pos_weight = torch.FloatTensor([(all_num - len(d_l))/len(d_l) for d_l in self.dataloader_list])
+        return self.task_disc_pos_weight
+
+
 
     def __getitem__(self, idx):
         self.cnt_iter +=1
