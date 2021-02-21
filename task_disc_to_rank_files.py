@@ -2,9 +2,11 @@ import numpy as np
 from sklearn.preprocessing import normalize
 import json
 import scipy.stats
+import random
 import os
+import sys
 
-model_dir = "results/all_T0"
+model_dir = sys.argv[1]
 task_disc_file = os.path.join(model_dir, "task_disc_pred.json")
 rank_dir = os.path.join(model_dir, "task_disc_rank")
 if not os.path.exists(rank_dir):
@@ -26,29 +28,36 @@ all_data = {}
 for task in ALL_TASK_NAMES:
     all_data[task]={}
 task_disc_data = json.load(open(task_disc_file,"r"))
-for task_idx, task in enumerate(ALL_TASK_NAMES):
-    print("-------------running {}-------------".format(task))
-    all_other_data_val = []
-    for other_task in ALL_TASK_NAMES:
-        if other_task == task: #do other tasks
-            continue
-        all_other_data_val += [ d[task_idx] for d in task_disc_data[other_task]['predictions'] ]
-    #rank all together, all other tasks data share same ranks
-    #rank reverse, small value get high rank
-    all_other_data_rank = list(scipy.stats.rankdata([ -i for i in all_other_data_val]))
-    cnt_start = 0
-    for other_task in ALL_TASK_NAMES:
-        if other_task == task: #do other tasks
-            continue
-        print("Process [{}] for [{}]".format(other_task,task))
-        other_data_unused = task_disc_data[other_task]['unused_list']
-        unused_len = len(other_data_unused)
-        other_data_rank = all_other_data_rank[cnt_start:cnt_start+unused_len]
-        cnt_start += unused_len
-        rank_data = [-1]*ALL_TASK_LEN[other_task]
-        for unused_idx, unused_rank in zip(other_data_unused, other_data_rank):
-            rank_data[unused_idx] = unused_rank
-        all_data[other_task]["for_"+task+"_rank"] = rank_data
+for TYPE in ["Normal", "Random"]:
+    for task_idx, task in enumerate(ALL_TASK_NAMES):
+        print("-------------running {}-------------".format(task))
+        all_other_data_val = []
+        for other_task in ALL_TASK_NAMES:
+            if other_task == task: #do other tasks
+                continue
+            all_other_data_val += [ d[task_idx] for d in task_disc_data[other_task]['predictions'] ]
+        #rank all together, all other tasks data share same ranks
+        #rank reverse, small value get high rank
+        #For random, init unique random numbers
+        if TYPE == "Random":
+            all_other_data_val = random.sample(range(len(all_other_data_val)), len(all_other_data_val))
+        all_other_data_rank = list(scipy.stats.rankdata([ -i for i in all_other_data_val]))
+        cnt_start = 0
+        for other_task in ALL_TASK_NAMES:
+            if other_task == task: #do other tasks
+                continue
+            print("Process [{}] for [{}]".format(other_task,task))
+            other_data_unused = task_disc_data[other_task]['unused_list']
+            unused_len = len(other_data_unused)
+            other_data_rank = all_other_data_rank[cnt_start:cnt_start+unused_len]
+            cnt_start += unused_len
+            rank_data = [-1]*ALL_TASK_LEN[other_task]
+            for unused_idx, unused_rank in zip(other_data_unused, other_data_rank):
+                rank_data[unused_idx] = unused_rank
+            if TYPE == "Random":
+                all_data[other_task]["for_"+task+"_random_rank"] = rank_data
+            else:
+                all_data[other_task]["for_"+task+"_rank"] = rank_data
 
 for task in ALL_TASK_NAMES:
     task_rank_file = os.path.join(rank_dir, task+"_rank.json")

@@ -1,8 +1,9 @@
 export MODEL_NAME=$1
 export POSTFIX=$2
-export BATCHSIZE=$3
-export TOTAL_EPOCH=$4
-export CUDA=$5
+export TASK_POSTFIX=$3
+export BATCHSIZE=$4
+export TOTAL_EPOCH=$5
+export CUDA=$6
 export USE_PER=100
 USE_PER_DIV=$((100/$USE_PER))
 
@@ -44,7 +45,7 @@ do
 	then
         check_steps=$(($epoch * $SAVE_STEPS))
         CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
-          --model_name_or_path ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}_${POSTFIX}/checkpoint-${check_steps}/ \
+          --model_name_or_path ./results/finetune_${MODEL_NAME}_${TASK_POSTFIX}_${TASK_NAME}/checkpoint-${check_steps}/ \
           --task_name $TASK_NAME \
           --do_predict \
           --fp16 \
@@ -53,7 +54,7 @@ do
           --output_dir ./results/FINETUNE_${MODEL_NAME}_${POSTFIX}_E${epoch}/
 	else
 		CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
-          --model_name_or_path ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}_${POSTFIX}/ \
+          --model_name_or_path ./results/finetune_${MODEL_NAME}_${TASK_POSTFIX}_${TASK_NAME}/ \
           --task_name $TASK_NAME \
           --do_predict \
           --fp16 \

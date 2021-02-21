@@ -149,12 +149,20 @@ class DataTrainingArguments:
         default=False,
         metadata={"help" : "Only specify this in training mode, if specified, train task_discriminator"}
     )
+    train_disc_CE: Optional[bool] = field(
+        default=False,
+        metadata={"help" : "If use CE to train task disc, default use BCE"}
+    )
+    task_disc_num: Optional[int] = field(
+        default=8,
+        metadata={"help" : "Number of task to disc, default is 8(GLUE tasks num)"}
+    )
     do_predict_task: Optional[bool] = field(
         default=False,
         metadata={"help" : "If train_dataset isn;t 100, use unused, else use eval. If predict task type"}
     )
     mtdnn_target_task: Optional[str] = field(
-        default=None,
+        default="None",
         metadata={
             "help" : "if want to train the mtdnn with a target task"
         }
@@ -358,7 +366,8 @@ def main():
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         #MODIFY --> don't set num labels
         #num_labels=num_labels,
-        finetuning_task=data_args.task_name,
+        #finetuning_task=data_args.task_name,
+        finetuning_task="all",
         cache_dir=model_args.cache_dir,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
@@ -367,6 +376,7 @@ def main():
     config.num_labels_dict = num_labels_dict
     config.all_task_names = ALL_TASK_NAMES
     config.train_task_disc = data_args.train_task_disc
+    config.task_disc_num = data_args.task_disc_num
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -395,6 +405,9 @@ def main():
     eval_dataset_list = [] 
     test_dataset_list = [] 
     task_use_dict = {} 
+    all_use_list_dict = {}
+    #Handle exception for do_predict_task_disc
+    EXCEPTION_DICT={}
     #when data_args.mtdnn_target_task is set
     ignore_list = []
     for task_name in ALL_TASK_NAMES:
@@ -485,13 +498,16 @@ def main():
                 rank_file = os.path.join(data_args.load_rank_dir, "{}_rank.json".format(data_args.task_name)) 
                 with open(rank_file, "r") as F:
                     ranking = json.load(F)
-                if data_args.mtdnn_target_task is not None: #use target task rank
+                if data_args.mtdnn_target_task !="None": #use target task rank
                     if task_name == data_args.mtdnn_target_task:#the target task    
                         #use all
                         use_list = [i for i in range(len(train_dataset))]
                     else: #other task
                         print(ranking.keys())
-                        use_rank = ranking["for_"+data_args.mtdnn_target_task+"_rank"]
+                        if data_args.rank_type == "random":
+                            use_rank = ranking["for_"+data_args.mtdnn_target_task+"_random_rank"]
+                        else:
+                            use_rank = ranking["for_"+data_args.mtdnn_target_task+"_rank"]
                         # the rank here is revers, we use the smallest rank
                         # we use the use_data_abs, the rank start from 1, so we use <=
                         use_list = []
@@ -507,7 +523,13 @@ def main():
                 print("rank list(first 10, should be accending): ", [use_rank[i] for i in use_list[:10]])
             #CHECK use_list unique
             assert len(use_list) == len(set(use_list)), "ERROR, use_list is not unique...."
+            #STORE USE LIST
+            all_use_list_dict[data_args.task_name] = use_list
             unused_list = list(set([i for i in range(len(train_dataset))])-set(use_list))
+            #Handle prediction error in trainer, when last batch size has only 1 element...
+            if len(unused_list) % training_args.per_device_eval_batch_size == 1:#
+                unused_list.append(use_list[0]) #add a pad element, remove afterr prediction end
+                EXCEPTION_DICT[data_args.task_name] = 1
             if len(unused_list) ==0:#handel exception, have at least 1 data
                 unused_list = [0]
             if len(use_list) ==0:#handel exception, have at least 1 data
@@ -566,8 +588,9 @@ def main():
     custom_data_collator = CustomDataCollator()
     #MODIFY --> For task disc, get pos weight
     model.task_disc_pos_weight = train_dataset_all.get_task_disc_pos_weight()
+    model.train_disc_CE = data_args.train_disc_CE
     #MODIFY--> set ignore
-    if data_args.mtdnn_target_task is not None:
+    if data_args.mtdnn_target_task != "None":
         #ignore those empty task
         model.ignore_list = ignore_list
         print(ignore_list)
@@ -613,6 +636,11 @@ def main():
 
     # MODIFY --> 這邊注意的是，Eval 和predict 都是用原本的方法來跑，不像train會用雙層dataloader
     # MODIFY --> Eval and predict needs "model.task_name to know which task it is running"
+    #STORE USE LIST
+    output_use_list = os.path.join(training_args.output_dir, "use_list.json")
+    print("Store all_use_list_dict to  {} ".format(output_use_list))
+    with open(output_use_list,"w") as F:
+        json.dump(all_use_list_dict ,F)
 
     # Evaluation
     eval_results = {}
@@ -620,8 +648,8 @@ def main():
         logger.info("*** Evaluate ***")
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, eval_dataset_store in zip(ALL_TASK_NAMES, eval_dataset_list):
-            if data_args.mtdnn_target_task is not None:
-                if task_name != data_args.mtdnn_target_task:
+            if data_args.mtdnn_target_task != "None":
+                if task_name != data_args.mtdnn_target_task and data_args.mtdnn_target_task != "random":
                     continue #skip
             # ----------------------------------------- set param start -----------------------------------------
             data_args.task_name = task_name
@@ -660,7 +688,7 @@ def main():
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
         for task_name, test_dataset_store in zip(ALL_TASK_NAMES, test_dataset_list):
-            if data_args.mtdnn_target_task is not None:
+            if data_args.mtdnn_target_task != "None":
                 if task_name != data_args.mtdnn_target_task:
                     continue #skip
             # ----------------------------------------- set param start -----------------------------------------
@@ -713,7 +741,7 @@ def main():
     if data_args.do_predict_task:
         trainer.model.do_predict_task=True
     if data_args.do_predict_task or data_args.vis_hidden:
-        logger.info("*** Test ***")
+        logger.info("*** Pred Task Disc ***")
         all_task_pred = {}
 
         #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
@@ -731,6 +759,9 @@ def main():
             # Removing the `label` columns because it contains -1 and Trainer won't like that.
             test_dataset.remove_columns_("label")
             predictions = trainer.predict(test_dataset=test_dataset).predictions
+            if task_name in EXCEPTION_DICT.keys():
+                predictions = predictions[:-1] #remove the last pad element
+                print("Remove exception element in Task [{}], real prediction len :{}".format(task_name, len(predictions)))
             all_task_pred[task_name] = {"unused_list": unused_list, "predictions":predictions.tolist()}
 
 

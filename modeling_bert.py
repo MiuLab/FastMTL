@@ -28,8 +28,10 @@ class BertForSequenceClassification(BertPreTrainedModel):
         self.do_predict_task=False
         #MODIFY --> For task discriminator
         self.train_task_disc = config.train_task_disc
-        self.task_discriminator = nn.Linear(config.hidden_size, len(self.all_task_names))
+        self.task_discriminator = nn.Linear(config.hidden_size, config.task_disc_num)
         self.name_to_id = {}
+        #Use CE for task disc, usually set to False, need to be add to the run_glue.py later...
+        self.train_disc_CE = False
         for i, name in enumerate(self.all_task_names):
             self.name_to_id[name] = i
 
@@ -110,13 +112,15 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
         #For train_task_disc, joint loss
         if self.train_task_disc and (labels is not None):
-            #task_disc_labels = torch.LongTensor([self.name_to_id[task_name]]*logits.size(0)).to(logits.device)
-            task_label_onehot = torch.zeros((pooled_output.size(0),len(self.all_task_names))).to(logits.device)
-            task_label_scatter = torch.LongTensor([[self.name_to_id[task_name]]]*logits.size(0)).to(logits.device)
-            task_disc_labels = task_label_onehot.scatter_(1, task_label_scatter, 1).to(logits.device)
+            if self.train_disc_CE:
+                task_disc_labels = torch.LongTensor([self.name_to_id[task_name]]*logits.size(0)).to(logits.device)
+                task_disc_loss_fct = CrossEntropyLoss()
+            else:
+                task_label_onehot = torch.zeros((pooled_output.size(0),len(self.all_task_names))).to(logits.device)
+                task_label_scatter = torch.LongTensor([[self.name_to_id[task_name]]]*logits.size(0)).to(logits.device)
+                task_disc_labels = task_label_onehot.scatter_(1, task_label_scatter, 1).to(logits.device)
+                task_disc_loss_fct = torch.nn.BCEWithLogitsLoss(pos_weight=self.task_disc_pos_weight.to(logits.device))
             task_disc_logits = self.task_discriminator(pooled_output)
-            #task_disc_loss_fct = CrossEntropyLoss()
-            task_disc_loss_fct = torch.nn.BCEWithLogitsLoss(pos_weight=self.task_disc_pos_weight.to(logits.device))
             task_disc_loss = task_disc_loss_fct(task_disc_logits, task_disc_labels)
             loss += task_disc_loss
         

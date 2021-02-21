@@ -50,7 +50,7 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --learning_rate 2e-5 \
   --num_train_epochs 10 \
   --overwrite_output_dir \
-  --output_dir ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}_${POSTFIX}/
+  --output_dir ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}/
   #--model_name_or_path bert-base-cased \
 
 #Need to do this incase that the trainer load the state in finetuning for continue training
