@@ -1,6 +1,6 @@
 export MODEL_NAME=$1
 export POSTFIX=$2
-export TASK_POSTFIX=$3
+export TASK_USE_ABS=$3
 export BATCHSIZE=$4
 export TOTAL_EPOCH=$5
 export CUDA=$6
@@ -38,6 +38,7 @@ for I in "${!DATA_ORDER[@]}"
 do
     TASK_NAME=${DATA_ORDER[I]}
     D_NUM=${DATA[$TASK_NAME]}
+    export TASK_POSTFIX=${POSTFIX}_${TASK_NAME}${TASK_USE_ABS}
     SAVE_STEPS=$( ceildiv $D_NUM $BATCHSIZE )
     epoch=${best_epoch[cnt_task]}
     echo $TASK_NAME
