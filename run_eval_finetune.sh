@@ -1,6 +1,6 @@
 export MODEL_NAME=$1
 export POSTFIX=$2
-export TASK_POSTFIX=$3
+export TASK_USE_ABS=$3
 export BATCHSIZE=$4
 export TOTAL_EPOCH=$5
 export CUDA=$6
@@ -20,12 +20,10 @@ DATA=( ['mnli']=$((392702/$USE_PER_DIV))
 
 ceildiv(){ echo $((($1+$2-1)/$2)); }
 
-echo ${DATA['rte']}
-exit
-
 for TASK_NAME in "${!DATA[@]}"
 do
     D_NUM=${DATA[$TASK_NAME]}
+    export TASK_POSTFIX=${POSTFIX}_${TASK_NAME}${TASK_USE_ABS}
     SAVE_STEPS=$( ceildiv $D_NUM $BATCHSIZE )
     for epoch in $(seq 1 $(($TOTAL_EPOCH-1)))
     do
@@ -41,7 +39,7 @@ do
     done
     wait
     CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
-      --model_name_or_path ./results/finetune_${MODEL_NAME}_${POSTFIX}_${TASK_NAME}_${POSTFIX}/ \
+      --model_name_or_path ./results/finetune_${MODEL_NAME}_${TASK_POSTFIX}_${TASK_NAME}/ \
       --task_name $TASK_NAME \
       --do_eval \
       --fp16 \

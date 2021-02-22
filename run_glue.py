@@ -519,8 +519,8 @@ def main():
                     use_rank = np.array(ranking[data_args.rank_type])
                     use_rank_argmax = np.argsort(use_rank) 
                     use_list = use_rank_argmax[len(train_dataset)-use_datanum:].tolist()
-                print("use rank(first 10): ", use_list[:10])
-                print("rank list(first 10, should be accending): ", [use_rank[i] for i in use_list[:10]])
+                    print("use rank(first 10): ", use_list[:10])
+                    print("rank list(first 10, should be accending): ", [use_rank[i] for i in use_list[:10]])
             #CHECK use_list unique
             assert len(use_list) == len(set(use_list)), "ERROR, use_list is not unique...."
             #STORE USE LIST
