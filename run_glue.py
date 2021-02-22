@@ -641,6 +641,15 @@ def main():
     print("Store all_use_list_dict to  {} ".format(output_use_list))
     with open(output_use_list,"w") as F:
         json.dump(all_use_list_dict ,F)
+    if data_args.mtdnn_target_task != "None":
+        output_use_txt = os.path.join(training_args.output_dir, "use_data.txt")
+        with open(output_use_txt,"w") as F:
+            print(ignore_list,file=F)
+            for task_name, train_dataset in zip(ALL_TASK_NAMES, train_dataset_list):
+                dat_num = len(train_dataset)
+                if task_name in ignore_list:
+                    dat_num = 0
+                print("[{}] -- used data: {}".format(task_name, dat_num), file=F)
 
     # Evaluation
     eval_results = {}
