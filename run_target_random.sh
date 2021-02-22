@@ -33,4 +33,4 @@ done
 #cd ..
 #./run_all_finetune.sh $TASK_NAME $POSTFIX $BATCHSIZE $CUDA
 #wait
-#./post_pipeline.sh $TASK_NAME $POSTFIX $TASK_POSTFIX $BATCHSIZE $CUDA
+./post_pipeline.sh $TASK_NAME $POSTFIX $TASK_USE_ABS $BATCHSIZE $CUDA
