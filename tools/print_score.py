@@ -82,7 +82,7 @@ def main():
     #Get MTDNN scores
     mtdnn_score_arr = get_score_from_dir(mtdnn_dir)
     mtdnn_score_str = score2str(mtdnn_score_arr)
-    print("[MTDNN] => ", mtdnn_score_str)
+    print("[TO-MTDNN] => ", mtdnn_score_str)
     #For Finetune
     if args.finetune:
         print("Get finetune best scores....")

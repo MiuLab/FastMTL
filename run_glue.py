@@ -223,6 +223,8 @@ class ModelArguments:
 
 
 def main():
+    #FLAG, if only use 100 for all dataset
+    TEST_RUN=False
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
@@ -549,6 +551,13 @@ def main():
         #    logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
         
         #MODIFY --> append datasets
+        if TEST_RUN==True:
+            print("---------------------------- Testing run, cut dataset to len=100 -------------------------------")
+            use_100 = [i for i in range(100)]
+            if len(train_dataset)> 100:
+                train_dataset = train_dataset.select(use_100)
+            eval_dataset = eval_dataset.select(use_100)
+            test_dataset = test_dataset.select(use_100)
         train_dataset_list.append(train_dataset)
         unused_train_dataset_list.append(unused_train_dataset)
         unused_idx_list.append(unused_list)

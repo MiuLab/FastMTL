@@ -1,4 +1,6 @@
 #ignore files
+plot_scores/
+plot_scores/*txt
 models/*
 *~
 results/*
