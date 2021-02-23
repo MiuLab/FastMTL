@@ -6,9 +6,9 @@ import json
 
 ALL_TASK_METRICS = {"mnli":["accuracy","mm_accuracy"], 
                     "rte":["accuracy"], 
-                    "qqp":["accuracy","f1"], 
+                    "qqp":["f1","accuracy"], 
                     "qnli":["accuracy"], 
-                    "mrpc":["accuracy","f1"], 
+                    "mrpc":["f1","accuracy"], 
                     "sst2":["accuracy"], 
                     "cola":["matthews_correlation"],
                     "stsb":["pearson","spearmanr"]}
