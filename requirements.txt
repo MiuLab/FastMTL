@@ -6,3 +6,4 @@ tqdm==4.47.0
 matplotlib==3.3.1
 MulticoreTSNE==0.1
 sklearn
+pytz==2021.1
