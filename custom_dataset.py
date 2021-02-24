@@ -42,6 +42,9 @@ class MergeDataset(Dataset):
             all_num = sum([len(d_l) for d_l in self.dataloader_list])
             self.task_disc_pos_weight = torch.FloatTensor([(all_num - len(d_l))/len(d_l) for d_l in self.dataloader_list])
         return self.task_disc_pos_weight
+    def get_all_task_num(self):
+        all_task_num = [len(d_l) for d_l in self.dataloader_list]
+        return all_task_num
 
 
 

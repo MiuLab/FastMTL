@@ -109,6 +109,8 @@ class BertForSequenceClassification(BertPreTrainedModel):
             else:
                 loss_fct = CrossEntropyLoss()
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+        if self.weight_loss and labels is not None:
+            loss = loss * self.task_loss_weight[self.name_to_id[task_name]]
 
         #For train_task_disc, joint loss
         if self.train_task_disc and (labels is not None):

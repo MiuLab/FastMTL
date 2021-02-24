@@ -149,6 +149,10 @@ class DataTrainingArguments:
         default=False,
         metadata={"help" : "Only specify this in training mode, if specified, train task_discriminator"}
     )
+    weight_loss: Optional[bool] = field(
+        default=False,
+        metadata={"help" : "When trianing TO_MTDNN, weight loss to train"}
+    )
     train_disc_CE: Optional[bool] = field(
         default=False,
         metadata={"help" : "If use CE to train task disc, default use BCE"}
@@ -597,6 +601,12 @@ def main():
     custom_data_collator = CustomDataCollator()
     #MODIFY --> For task disc, get pos weight
     model.task_disc_pos_weight = train_dataset_all.get_task_disc_pos_weight()
+    #For task weight
+    all_task_num = train_dataset_all.get_all_task_num()
+    max_num = max(all_task_num)
+    E=2.718281828
+    model.task_loss_weight = torch.log(torch.FloatTensor([(max_num/n)*E for n in all_task_num]))
+    model.weight_loss = data_args.weight_loss
     model.train_disc_CE = data_args.train_disc_CE
     #MODIFY--> set ignore
     if data_args.mtdnn_target_task != "None":

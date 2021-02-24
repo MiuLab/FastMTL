@@ -12,6 +12,7 @@ export MTDNN_TARGET_TASK=${10}
 export DO_PREDICT_TASK=${11}
 export TRAIN_DISC_CE=${12}
 export TO_VIS_HIDDEN=${13}
+export WEIGHT_LOSS=${14}
 
 USE_PER_DIV=$((100/$USE_PER))
 
@@ -87,6 +88,13 @@ else
     VIS_HIDDEN=""
 fi
 
+if [ "$WEIGHT_LOSS" = "True" ]
+then
+    WEIGHT_LOSS="--weight_loss"
+else
+    WEIGHT_LOSS=""
+fi
+
 #Run
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path bert-base-cased \
@@ -110,6 +118,7 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   $DO_PREDICT_TASK \
   $TRAIN_TASK_DISC \
   $TRAIN_DISC_CE \
+  $WEIGHT_LOSS \
   --rank_type $RANK_TYPE \
   --output_dir ./results/${TASK_NAME}_${POSTFIX}/
 
