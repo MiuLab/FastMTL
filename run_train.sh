@@ -14,6 +14,8 @@ export TRAIN_DISC_CE=${12}
 export TO_VIS_HIDDEN=${13}
 export WEIGHT_LOSS=${14}
 
+source ./python_alias.sh
+
 USE_PER_DIV=$((100/$USE_PER))
 
 #need to deal with batch size and steps...
