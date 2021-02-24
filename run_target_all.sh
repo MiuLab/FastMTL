@@ -26,7 +26,7 @@ wait
 #reset param
 
 
-export TASK_USE_ABS=100000
+export TASK_USE_ABS=1000
 export TASK_LOAD_RANK_DIR="results/${TASK_NAME}_${POSTFIX}/task_disc_rank"
 export TASK_TRAIN_TASK_DISC="False"
 export TASK_DO_PREDICT_TASK="False"
