@@ -3,9 +3,9 @@ export POSTFIX=$2
 export TASK_USE_ABS=$3
 export BATCHSIZE=$4
 export CUDA=$5
-export TOTAL_EPOCH=1
+export TOTAL_EPOCH=10
 #export HTDOCS=~/htdocs/plot_scores
-export HTDOCS=plot_scores
+export HTDOCS=plot_scores/plot_scores
 export HTDOCS_JSON=${HTDOCS}/json
 
 #Eval

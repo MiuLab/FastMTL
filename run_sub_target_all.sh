@@ -1,13 +1,13 @@
 #If want to use full, set this to "-1", else a number
-export SUBDATASET_NUM="-1"
+export SUBDATASET_NUM="2400"
 #If set to True, Use subdataset in Finetune, too
-export SUBDATASET_FINETUNE="False"
+export SUBDATASET_FINETUNE="True"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
-export SUBDATASET_SEED=""
-export POSTFIX=rand500DBCE
+export SUBDATASET_SEED=5
+export POSTFIX=rand400DBCE
 export BATCHSIZE=32
 export USE_PER=100
-export USE_ABS=500
+export USE_ABS=400
 #export LOAD_RANK_DIR=rank_files/bert-base/
 #export LOAD_RANK_DIR="results/all_T0/task_disc_rank"
 export LOAD_RANK_DIR="None"

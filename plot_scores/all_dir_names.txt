@@ -1,3 +1,7 @@
 all_0
-all_rand500DCE_1000
+all_rand500DBCE_1000
+all_rand500DBCE_100000
+all_rand500_rand
 all_rand500_rand_1000
+SF_sub_2400_5_rand400DBCE_2000
+SF_sub_2400_5_rand400DCE_2000

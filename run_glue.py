@@ -171,6 +171,12 @@ class DataTrainingArguments:
             "help" : "if want to train the mtdnn with a target task"
         }
     )
+    subdataset_file: Optional[str] = field(
+        default="None",
+        metadata={
+            "help" : "if want to use sub train set, specify the subdataset id file"
+        }
+    )
 
     def __post_init__(self):
         if self.task_name is not None:
@@ -215,7 +221,7 @@ class ModelArguments:
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+        metadata={"help": "the specific model version to use (can be a branch name, tag name or commit id)."},
     )
     use_auth_token: bool = field(
         default=False,
@@ -485,6 +491,11 @@ def main():
         datasets_dict[data_args.task_name] = datasets
 
         train_dataset = datasets["train"]
+        if data_args.subdataset_file != "None": #use subdataset
+            subdataset_list = json.load(open(data_args.subdataset_file,"r"))
+            train_dataset = train_dataset.select(subdataset_list[data_args.task_name])
+            
+
         eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
         #MODIFY--> Init unused dataset ausing eval dataset
         unused_train_dataset = eval_dataset

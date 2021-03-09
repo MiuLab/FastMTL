@@ -1,4 +1,4 @@
-export TASK_NAME=$1
+export MODEL_NAME=$1
 export POSTFIX=$2
 export BATCHSIZE=$3
 export USE_PER=$4
@@ -13,7 +13,10 @@ export DO_PREDICT_TASK=${11}
 export TRAIN_DISC_CE=${12}
 export TO_VIS_HIDDEN=${13}
 export WEIGHT_LOSS=${14}
+export SUBDATASET_FILE=${15}
 
+
+export TASK_NAME=all
 USE_PER_DIV=$((100/$USE_PER))
 
 #need to deal with batch size and steps...
@@ -115,15 +118,16 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   $VIS_HIDDEN \
   --load_rank_dir $LOAD_RANK_DIR \
   --mtdnn_target_task $MTDNN_TARGET_TASK \
+  --subdataset_file $SUBDATASET_FILE \
   $DO_PREDICT_TASK \
   $TRAIN_TASK_DISC \
   $TRAIN_DISC_CE \
   $WEIGHT_LOSS \
   --rank_type $RANK_TYPE \
-  --output_dir ./results/${TASK_NAME}_${POSTFIX}/
+  --output_dir ./results/${MODEL_NAME}_${POSTFIX}/
 
 
 
 #Need to do this incase that the trainer load the state in finetuning for continue training
 #When continue training, modify the trainer_log.json back to trainer_state.json, and the model can continue training
-mv ./results/${TASK_NAME}_${POSTFIX}/trainer_state.json ./results/${TASK_NAME}_${POSTFIX}/trainer_log.json
+mv ./results/${MODEL_NAME}_${POSTFIX}/trainer_state.json ./results/${MODEL_NAME}_${POSTFIX}/trainer_log.json
