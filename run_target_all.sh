@@ -23,6 +23,8 @@ export TRAIN_DISC_CE="False"
 export TO_VIS_HIDDEN="True"
 export WEIGHT_LOSS="False"
 
+source ./python_alias.sh
+
 #export TRAIN_DISC_CE="True"
 #export DO_PREDICT_TASK=" "
 if [ $SUBDATASET_NUM = "-1" ]

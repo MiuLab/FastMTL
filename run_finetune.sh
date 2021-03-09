@@ -7,6 +7,8 @@ export SUBDATASET_FINETUNE_FILE=$6
 export USE_PER=100
 USE_PER_DIV=$((100/$USE_PER))
 
+source ./python_alias.sh
+
 #need to deal with batch size and steps...
 declare -A DATA
 DATA=( ['mnli']=$((392702/$USE_PER_DIV))

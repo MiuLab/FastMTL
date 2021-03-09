@@ -17,6 +17,8 @@ export SUBDATASET_FILE=${15}
 
 
 export TASK_NAME=all
+source ./python_alias.sh
+
 USE_PER_DIV=$((100/$USE_PER))
 
 #need to deal with batch size and steps...

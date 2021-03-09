@@ -36,6 +36,8 @@ else
 
 fi
 
+source ./python_alias.sh
+
 ALL_TASK_NAMES=("rte" "qnli" "mrpc" "sst2" "cola" "stsb" "mnli" "qqp")
 TO_DIR=results/${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}
 mkdir $TO_DIR

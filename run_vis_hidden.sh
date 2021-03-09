@@ -3,6 +3,8 @@ export TASK_NAME=all
 export POSTFIX=disc
 export SHOWNUM=2000
 
+source ./python_alias.sh
+
 if [ "$SHOWNUM" = "-1" ]
 then
     CUDA_VISIBLE_DEVICES=0 python3 run_glue.py \

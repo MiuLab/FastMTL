@@ -4,6 +4,8 @@ export TASK_NAME=$3
 export TO_DIR=$4
 export CUDA=$5
 
+source ./python_alias.sh
+
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path ./results/${MODEL_NAME}_${POSTFIX}/ \
   --task_name $TASK_NAME \
