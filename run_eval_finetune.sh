@@ -4,6 +4,7 @@ export TASK_USE_ABS=$3
 export BATCHSIZE=$4
 export TOTAL_EPOCH=$5
 export CUDA=$6
+export SUBDATASET_NUM=$7
 export USE_PER=100
 USE_PER_DIV=$((100/$USE_PER))
 
@@ -11,14 +12,28 @@ source ./python_alias.sh
 
 #need to deal with batch size and steps...
 declare -A DATA
-DATA=( ['mnli']=$((392702/$USE_PER_DIV))
-    ['rte']=$((2490/$USE_PER_DIV))
-    ['qqp']=$((363849/$USE_PER_DIV)) 
-    ['qnli']=$((104743/$USE_PER_DIV)) 
-    ['mrpc']=$((3668/$USE_PER_DIV)) 
-    ['sst2']=$((67349/$USE_PER_DIV)) 
-    ['cola']=$((8551/$USE_PER_DIV)) 
-    ['stsb']=$((5749/$USE_PER_DIV)))
+if [ "SUBDATASET_NUM" = "-1" ]
+then
+        DATA=( ['mnli']=$((392702/$USE_PER_DIV))
+            ['rte']=$((2490/$USE_PER_DIV))
+            ['qqp']=$((363849/$USE_PER_DIV)) 
+            ['qnli']=$((104743/$USE_PER_DIV)) 
+            ['mrpc']=$((3668/$USE_PER_DIV)) 
+            ['sst2']=$((67349/$USE_PER_DIV)) 
+            ['cola']=$((8551/$USE_PER_DIV)) 
+            ['stsb']=$((5749/$USE_PER_DIV)) 
+            ['all']=0 )
+else
+        DATA=( ['mnli']=$(($SUBDATASET_NUM/$USE_PER_DIV))
+            ['rte']=$(($SUBDATASET_NUM/$USE_PER_DIV))
+            ['qqp']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
+            ['qnli']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
+            ['mrpc']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
+            ['sst2']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
+            ['cola']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
+            ['stsb']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
+            ['all']=0 )
+fi
 
 ceildiv(){ echo $((($1+$2-1)/$2)); }
 
