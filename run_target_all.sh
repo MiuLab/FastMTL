@@ -4,7 +4,7 @@ export SUBDATASET_NUM="-1"
 export SUBDATASET_FINETUNE="False"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
 export SUBDATASET_SEED=""
-export POSTFIX=rand500DBCE
+export POSTFIX=rand500DBCE1
 export BATCHSIZE=32
 export USE_PER=100
 export USE_ABS=500
@@ -13,7 +13,7 @@ export USE_ABS=500
 export LOAD_RANK_DIR="None"
 # eval_loss_rank, entropy rank
 export RANK_TYPE="None"
-export CUDA=0
+export CUDA=1
 export TRAIN_TASK_DISC="True"
 #export TRAIN_TASK_DISC="False"
 #export MTDNN_TARGET_TASK="stsb"
@@ -47,6 +47,7 @@ else
 
 fi
 #./run_train.sh $MODEL_NAME $POSTFIX $BATCHSIZE $USE_PER $USE_ABS $LOAD_RANK_DIR $RANK_TYPE $CUDA $TRAIN_TASK_DISC $MTDNN_TARGET_TASK $DO_PREDICT_TASK $TRAIN_DISC_CE $TO_VIS_HIDDEN $WEIGHT_LOSS $SUBDATASET_FILE
+#python3 task_disc_to_rank_files.py results/${MODEL_NAME}_${POSTFIX}/
 wait
 #reset param
 
@@ -59,7 +60,7 @@ export TASK_TRAIN_DISC_CE="False"
 export TASK_TO_VIS_HIDDEN="False"
 export TASK_WEIGHT_LOSS="False"
 
-ALL_TASK_NAMES=("rte" "qnli" "mrpc" "sst2" "cola" "stsb" "mnli" "qqp")
+ALL_TASK_NAMES=("rte" "mrpc" "stsb")
 TO_DIR=results/${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}
 mkdir $TO_DIR
 for TASK_MTDNN_TARGET_TASK in "${ALL_TASK_NAMES[@]}"

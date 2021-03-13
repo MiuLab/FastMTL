@@ -65,7 +65,7 @@ then
 fi
 echo $SAVE_STEPS
 echo $USE_PER
-SAVE_STEPS=-1
+SAVE_STEPS=10000000
 
 if [ "$TRAIN_TASK_DISC" = "True" ]
 then
@@ -108,7 +108,7 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --task_name $TASK_NAME \
   --fp16 \
   --max_seq_length 128 \
-  --seed 13 \
+  --seed 84 \
   --per_device_train_batch_size $BATCHSIZE \
   --per_device_eval_batch_size 128 \
   --save_steps $SAVE_STEPS \

@@ -4,11 +4,11 @@ export SUBDATASET_NUM="-1"
 export SUBDATASET_FINETUNE="False"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
 export SUBDATASET_SEED=""
-export POSTFIX=rand500_rand
+export POSTFIX=rand500_rand1
 export BATCHSIZE=32
 export USE_PER=100
-export CUDA=0
-export TASK_USE_ABS=1000
+export CUDA=4
+export TASK_USE_ABS=2000
 export TASK_LOAD_RANK_DIR="rank_files/${POSTFIX}"
 export TASK_RANK_TYPE="random"
 export TASK_TRAIN_TASK_DISC="False"
@@ -38,7 +38,7 @@ fi
 
 source ./python_alias.sh
 
-ALL_TASK_NAMES=("rte" "qnli" "mrpc" "sst2" "cola" "stsb" "mnli" "qqp")
+ALL_TASK_NAMES=("rte" "mrpc" "stsb")
 TO_DIR=results/${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}
 mkdir $TO_DIR
 for TASK_MTDNN_TARGET_TASK in "${ALL_TASK_NAMES[@]}"

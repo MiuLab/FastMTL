@@ -13,7 +13,7 @@ source ./python_alias.sh
 #need to deal with batch size and steps...
 #Dict(associate array) don't retain the order
 declare -A DATA
-if [ "SUBDATASET_NUM" = "-1" ]
+if [ "$SUBDATASET_NUM" = "-1" ]
 then
         DATA=( ['mnli']=$((392702/$USE_PER_DIV))
             ['rte']=$((2490/$USE_PER_DIV))
@@ -36,7 +36,7 @@ else
             ['all']=0 )
 fi
 #Use this to retain the order
-DATA_ORDER=("mnli" "rte" "qqp" "qnli" "mrpc" "sst2" "cola" "stsb")
+DATA_ORDER=("rte" "mrpc" "stsb")
 
 ceildiv(){ echo $((($1+$2-1)/$2)); }
 #For best epoch
@@ -54,6 +54,7 @@ cnt_task=0
 for I in "${!DATA_ORDER[@]}"
 do
     TASK_NAME=${DATA_ORDER[I]}
+    echo $TASK_NAME
     D_NUM=${DATA[$TASK_NAME]}
     export TASK_POSTFIX=${POSTFIX}_${TASK_NAME}${TASK_USE_ABS}
     SAVE_STEPS=$( ceildiv $D_NUM $BATCHSIZE )

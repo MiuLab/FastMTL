@@ -24,6 +24,8 @@ wait
 PLOT_DIR=$HTDOCS_JSON/${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}/
 mkdir $PLOT_DIR
 cp ./results/FINETUNE_${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}_BEST/best_scores.json $PLOT_DIR
+#CP fake test files
+cp -r FAKE_TEST3/* ./results/FINETUNE_${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}_BEST/
 #WRITE to the name list
 ls $HTDOCS_JSON > $HTDOCS/all_dir_names.txt
 

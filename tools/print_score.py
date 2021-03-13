@@ -4,14 +4,17 @@ import argparse
 import numpy as np
 import json
 
-ALL_TASK_METRICS = {"mnli":["accuracy","mm_accuracy"], 
-                    "rte":["accuracy"], 
-                    "qqp":["f1","accuracy"], 
-                    "qnli":["accuracy"], 
+ALL_TASK_METRICS = {"rte":["accuracy"], 
                     "mrpc":["f1","accuracy"], 
-                    "sst2":["accuracy"], 
-                    "cola":["matthews_correlation"],
                     "stsb":["pearson","spearmanr"]}
+#ALL_TASK_METRICS = {"mnli":["accuracy","mm_accuracy"], 
+#                    "rte":["accuracy"], 
+#                    "qqp":["f1","accuracy"], 
+#                    "qnli":["accuracy"], 
+#                    "mrpc":["f1","accuracy"], 
+#                    "sst2":["accuracy"], 
+#                    "cola":["matthews_correlation"],
+#                    "stsb":["pearson","spearmanr"]}
 def score2str(all_score_list, epoch_idx = None):
     all_score_str=""
     score_list = []
@@ -125,18 +128,6 @@ def main():
             best_epoch_txt = os.path.join(best_dir, "best_epoch.txt")
             with open(best_epoch_txt,"w") as F:
                 F.writelines("\n".join([str(x) for x in best_scores['best_epoch']])+"\n")
-
-
-        
-
-
-
-        
-        
-
-
-
-
 
 
 if __name__ == '__main__':

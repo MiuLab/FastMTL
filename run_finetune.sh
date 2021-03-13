@@ -12,47 +12,8 @@ source ./python_alias.sh
 
 #need to deal with batch size and steps...
 declare -A DATA
-if [ "SUBDATASET_NUM" = "-1" ]
-then
-        DATA=( ['mnli']=$((392702/$USE_PER_DIV))
-            ['rte']=$((2490/$USE_PER_DIV))
-            ['qqp']=$((363849/$USE_PER_DIV)) 
-            ['qnli']=$((104743/$USE_PER_DIV)) 
-            ['mrpc']=$((3668/$USE_PER_DIV)) 
-            ['sst2']=$((67349/$USE_PER_DIV)) 
-            ['cola']=$((8551/$USE_PER_DIV)) 
-            ['stsb']=$((5749/$USE_PER_DIV)) 
-            ['all']=0 )
-else
-        DATA=( ['mnli']=$(($SUBDATASET_NUM/$USE_PER_DIV))
-            ['rte']=$(($SUBDATASET_NUM/$USE_PER_DIV))
-            ['qqp']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
-            ['qnli']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
-            ['mrpc']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
-            ['sst2']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
-            ['cola']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
-            ['stsb']=$(($SUBDATASET_NUM/$USE_PER_DIV)) 
-            ['all']=0 )
-fi
-
-
-#Data num
-#For not all
-D_NUM=${DATA[$TASK_NAME]}
-ceildiv(){ echo $((($1+$2-1)/$2)); }
-SAVE_STEPS=$( ceildiv $D_NUM $BATCHSIZE )
-#For all
-if [ "$TASK_NAME" = "all" ]
-then
-    SAVE_STEPS=0
-    for i in "${!DATA[@]}"
-    do
-        d=${DATA[$i]}
-        s=$( ceildiv $d $BATCHSIZE )
-        SAVE_STEPS=$(( $SAVE_STEPS + $s ))
-    done
-fi
-echo $SAVE_STEPS
+SAVE_STEPS="-1"
+echo "Save Steps ---------------- $SAVE_STEPS "
 
 #Run
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \

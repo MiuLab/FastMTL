@@ -57,7 +57,7 @@ export TASK_TRAIN_DISC_CE="False"
 export TASK_TO_VIS_HIDDEN="False"
 export TASK_WEIGHT_LOSS="False"
 
-ALL_TASK_NAMES=("rte" "qnli" "mrpc" "sst2" "cola" "stsb" "mnli" "qqp")
+ALL_TASK_NAMES=("rte" "mrpc" "stsb")
 TO_DIR=results/${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}
 mkdir $TO_DIR
 for TASK_MTDNN_TARGET_TASK in "${ALL_TASK_NAMES[@]}"

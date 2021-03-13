@@ -1,7 +1,7 @@
 import sys
 import os
 model_name = sys.argv[1]
-ALL_TASK_NAMES=["mnli", "rte", "qqp", "qnli", "mrpc", "sst2", "cola", "stsb"]
+ALL_TASK_NAMES=["rte", "mrpc", "stsb"]
 print("Print Use data, copy to excel...")
 for task in ALL_TASK_NAMES:
     print_str=["{}-{}".format(model_name, task)]
