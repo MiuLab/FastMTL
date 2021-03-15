@@ -4,9 +4,9 @@ import argparse
 import numpy as np
 import json
 
-ALL_TASK_METRICS = {"rte":["accuracy"], 
-                    "mrpc":["f1","accuracy"], 
-                    "stsb":["pearson","spearmanr"]}
+ALL_TASK_METRICS = {"rte":["loss"], 
+                    "mrpc":["loss"], 
+                    "stsb":["loss"]}
 #ALL_TASK_METRICS = {"mnli":["accuracy","mm_accuracy"], 
 #                    "rte":["accuracy"], 
 #                    "qqp":["f1","accuracy"], 
@@ -102,7 +102,7 @@ def main():
         best_scores = {"best_index":[], "best_epoch":[], "best_score":[], "best_score_str":"", "all_scores":all_scores}
         #Get all metrics best epoch
         for m in range(len(ALL_TASK_METRICS)):
-            cmp_scores = [np.prod(score[m]) for score in all_scores]
+            cmp_scores = [-np.prod(score[m]) for score in all_scores]
             best_index = np.argmax(cmp_scores)
             #Epoch is range from 1 to epoch_num+1, index are range from 0 to epoch_num
             best_epoch = best_index + 1
@@ -115,22 +115,19 @@ def main():
         print("[FINETUNE] => ", finetune_score_str)
         best_dir = os.path.join(result_dir, "FINETUNE_{}_BEST".format(args.model_name))
         #Make best dir
-        if not os.path.isdir(best_dir):
-            os.mkdir( best_dir);
-        best_epoch_txt = os.path.join(best_dir, "best_epoch.txt")
         if args.best_dir:
+            if not os.path.isdir(best_dir):
+                os.mkdir( best_dir);
+            if args.mv_test:
+                mv_test_to_best_dir(args, result_dir, best_dir, best_scores["best_epoch"])
             #JSON file for best scores
             best_scores_json = os.path.join(best_dir, "best_scores.json")
             with open(best_scores_json,"w") as F:
                 json.dump(best_scores, F)
             #Best epoch is for the shell script to load and run predict
+            best_epoch_txt = os.path.join(best_dir, "best_epoch.txt")
             with open(best_epoch_txt,"w") as F:
                 F.writelines("\n".join([str(x) for x in best_scores['best_epoch']])+"\n")
-        if args.mv_test:
-            with open(best_epoch_txt,"r") as F:
-                BEST_EPOCH = [int(line.replace("\n","")) for line in F.readlines()]
-                print(BEST_EPOCH)
-            mv_test_to_best_dir(args, result_dir, best_dir, BEST_EPOCH)
 
 
 if __name__ == '__main__':

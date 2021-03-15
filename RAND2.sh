@@ -4,7 +4,7 @@ export SUBDATASET_NUM="-1"
 export SUBDATASET_FINETUNE="False"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
 export SUBDATASET_SEED=""
-export POSTFIX=rand500_rand
+export POSTFIX=rand500_rand1
 export BATCHSIZE=32
 export USE_PER=100
 export CUDA=1
