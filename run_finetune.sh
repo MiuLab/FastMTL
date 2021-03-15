@@ -28,7 +28,7 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --save_steps $SAVE_STEPS \
   --learning_rate 2e-5 \
   --subdataset_file $SUBDATASET_FINETUNE_FILE \
-  --num_train_epochs 10 \
+  --num_train_epochs 5 \
   --overwrite_output_dir \
   --output_dir ./results/finetune_${MODEL_NAME}_${POSTFIX}/
   #--model_name_or_path bert-base-cased \
