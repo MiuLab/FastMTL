@@ -5,7 +5,7 @@ export SUBDATASET_FINETUNE="False"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
 export SUBDATASET_SEED=""
 export POSTFIX=rand500DBCE
-export BATCHSIZE=32
+export BATCHSIZE=8
 export USE_PER=100
 export USE_ABS=500
 #export LOAD_RANK_DIR=rank_files/bert-base/
@@ -13,15 +13,17 @@ export USE_ABS=500
 export LOAD_RANK_DIR="None"
 # eval_loss_rank, entropy rank
 export RANK_TYPE="None"
-export CUDA=0
-export TRAIN_TASK_DISC="True"
+export CUDA=2
+export TRAIN_TASK_DISC="False"
 #export TRAIN_TASK_DISC="False"
 #export MTDNN_TARGET_TASK="stsb"
 export MTDNN_TARGET_TASK="None"
-export DO_PREDICT_TASK="True"
+export DO_PREDICT_TASK="False"
 export TRAIN_DISC_CE="False"
-export TO_VIS_HIDDEN="True"
+export TO_VIS_HIDDEN="False"
 export WEIGHT_LOSS="False"
+export DO_PREDICT_GRAD="True"
+export TRAIN_GRAD_DISC="True"
 
 source ./python_alias.sh
 
@@ -30,7 +32,7 @@ source ./python_alias.sh
 if [ $SUBDATASET_NUM = "-1" ]
 then
     echo "--------- Use ALL ----------"
-    export MODEL_NAME=all
+    export MODEL_NAME=grad
     export SUBDATASET_FILE="None"
     export SUBDATASET_FINETUNE_FILE="None"
 else
@@ -46,8 +48,8 @@ else
     export MODEL_NAME=${IF_SF}sub_${SUBDATASET_NUM}_${SUBDATASET_SEED}
 
 fi
-#./run_train.sh $MODEL_NAME $POSTFIX $BATCHSIZE $USE_PER $USE_ABS $LOAD_RANK_DIR $RANK_TYPE $CUDA $TRAIN_TASK_DISC $MTDNN_TARGET_TASK $DO_PREDICT_TASK $TRAIN_DISC_CE $TO_VIS_HIDDEN $WEIGHT_LOSS $SUBDATASET_FILE
-wait
+./run_train.sh $MODEL_NAME $POSTFIX $BATCHSIZE $USE_PER $USE_ABS $LOAD_RANK_DIR $RANK_TYPE $CUDA $TRAIN_TASK_DISC $MTDNN_TARGET_TASK $DO_PREDICT_TASK $TRAIN_DISC_CE $TO_VIS_HIDDEN $WEIGHT_LOSS $SUBDATASET_FILE $DO_PREDICT_GRAD $TRAIN_GRAD_DISC
+exit
 #reset param
 
 

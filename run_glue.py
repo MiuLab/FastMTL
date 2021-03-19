@@ -35,7 +35,6 @@ from transformers import (
     PretrainedConfig,
     #Modify --> use custom trainer
     #Trainer,
-    TrainingArguments,
     default_data_collator,
     set_seed,
 )
@@ -178,6 +177,34 @@ class DataTrainingArguments:
         }
     )
 
+    #DEPRECATED: add caculate gradient mode
+    '''
+    caculate_gradient: bool = field(
+        default = False,
+        metadata = {
+            "help": "Whether to caculate gradients of the shared parameters of the model at training data."
+        }
+    )
+    '''
+    #END_DEPRECATION
+
+    #TEMP_MODIFY: grad_disc
+    train_grad_disc: Optional[bool] = field(
+        default = False,
+
+        metadata = {
+            "help": "Only specify this in training mode.  If specified, train grad_discriminator."
+        }
+    )
+
+    do_predict_grad: Optional[bool] = field(
+        default = False,
+
+        metadata = {
+            "help": "If train_dataset isn't 100, use unused.  Else use eval.  Whether to predict grad type."
+        }
+    )
+
     def __post_init__(self):
         if self.task_name is not None:
             self.task_name = self.task_name.lower()
@@ -230,7 +257,6 @@ class ModelArguments:
             "with private models)."
         },
     )
-
 
 def main():
     #FLAG, if only use 100 for all dataset
@@ -389,6 +415,12 @@ def main():
     config.all_task_names = ALL_TASK_NAMES
     config.train_task_disc = data_args.train_task_disc
     config.task_disc_num = data_args.task_disc_num
+    #TEMP_MODIFY: add grad_disc arguments
+    config.train_grad_disc = data_args.train_grad_disc
+    #test
+    print(data_args.train_grad_disc)
+    print(data_args.do_predict_grad)
+    #END_TEMP
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -491,6 +523,7 @@ def main():
         datasets_dict[data_args.task_name] = datasets
 
         train_dataset = datasets["train"]
+
         if data_args.subdataset_file != "None": #use subdataset
             subdataset_list = json.load(open(data_args.subdataset_file,"r"))
             train_dataset = train_dataset.select(subdataset_list[data_args.task_name])
@@ -820,6 +853,94 @@ def main():
         if data_args.vis_hidden:
             all_hidden_states = np.array([i.numpy() for i in all_hidden_states])
             vis_hidden(all_hidden_states,all_y,data_args.vis_hidden_file, ALL_TASK_NAMES)
+
+    #TEMP_MODIFY: predict task with gradient
+    if data_args.do_predict_grad:
+        trainer.model.do_predict_grad=True
+    if data_args.do_predict_grad:
+        logger.info("*** Pred Grad Disc ***")
+        all_grad_pred = {}
+
+        #MODIFY --> loop to eval all tasks in TASK_NAME_LIST
+        for task_name, test_dataset_store, unused_list in zip(ALL_TASK_NAMES, unused_train_dataset_list, unused_idx_list):
+
+            # ----------------------------------------- set param start -----------------------------------------
+            data_args.task_name = task_name
+            datasets = datasets_dict[data_args.task_name]
+            # ----------------------------------------- set param end -----------------------------------------
+            trainer.model.task_name = data_args.task_name
+            tasks = [data_args.task_name]
+            test_dataset = test_dataset_store
+            if test_dataset is None:
+                continue
+            # Removing the `label` columns because it contains -1 and Trainer won't like that.
+            test_dataset.remove_columns_("label")
+            predictions = trainer.predict(test_dataset=test_dataset).predictions
+            if task_name in EXCEPTION_DICT.keys():
+                predictions = predictions[:-1] #remove the last pad element
+                print("Remove exception element in Task [{}], real prediction len :{}".format(task_name, len(predictions)))
+            all_grad_pred[task_name] = {"unused_list": unused_list, "predictions":predictions.tolist()}
+
+        output_pred_file = os.path.join(training_args.output_dir, f"grad_disc_pred.json")
+
+        with open(output_pred_file,"w") as F:
+            json.dump(all_grad_pred ,F)
+    #END_TEMP
+
+
+    #DEPRECATED: caculate gradient
+    '''
+    if data_args.caculate_gradient:
+        #record whether originally the model is in training or evaluation mode for safety
+        original_mode = "train" if model.training else "eval"
+        model.train()
+        all_grads = {}
+
+        for task_name, dataset in zip(ALL_TASK_NAMES, train_dataset_list):
+            grad_collator = gradientCollator(task_name)
+            task_grads = []
+
+            dataloader = DataLoader(
+                dataset,
+                #if we want to know the exact gradient of each datum, we can input only 1 per time
+                batch_size = 1,
+                shuffle = False,
+                collate_fn = grad_collator
+            )
+            trange = tqdm(dataloader, total = len(dataloader), desc = task_name)
+            logger.info(f"Caculating gradient for {task_name}...")
+
+            for inputs in trange:
+                model.zero_grad()
+
+                #prepare tensor
+                for key, value in inputs.items():
+                    if isinstance(value, torch.Tensor):
+                        inputs[key] = value.to(training_args.device)
+
+                outputs = model(**inputs)
+                #TEMP_MODIFY: test
+                grad = torch.autograd.grad(outputs["loss"], model.bert.parameters(), retain_graph = False, create_graph = False)[0].view(-1).detach().cpu()
+                print(grad.element_size() * grad.nelement() / 1024 / 1024)
+                grad = grad.tolist()
+                print(sys.getsizeof(grad) / 1024 / 1024)
+                exit()
+                #END_TEMP
+                task_grads.append(grad)
+
+            all_grads[task_name] = task_grads
+
+        #switch to origin mode
+        if original_mode == "train":
+            model.train()
+        else:
+            model.eval()
+
+        with open(os.path.join(training_args.output_dir, "grad.json"), "w") as f_grad:
+            json.dump(all_grads, f_grad)
+    '''
+    #END_DEPRECATION
+
     return eval_results
 
 

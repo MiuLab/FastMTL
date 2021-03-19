@@ -1,5 +1,9 @@
 from transformers.trainer import *
 import logging
+#DEPRECATED: import DataLoader for gradient caculation
+#from torch.utils.data import DataLoader
+#END_DEPRECATION
+
 def _get_train_sampler(args,dataset):
     # Baically, only the random sampler will be run
     if isinstance(dataset, torch.utils.data.IterableDataset) or not isinstance(
@@ -96,4 +100,19 @@ class CustomDataCollator:
     def __call__(self, examples: List[dict]):
         return examples[0]
 
+#DEPRECATED: collator for gradient calculating
+'''
+class gradientCollator(object):
+    def __init__(self, task_name):
+        self.task_name = task_name
 
+    def __call__(self, batch):
+        inputs = {}
+        inputs["attention_mask"] = torch.tensor([x["attention_mask"] for x in batch])
+        inputs["input_ids"] = torch.tensor([x["input_ids"] for x in batch])
+        inputs["token_type_ids"] = torch.tensor([x["token_type_ids"] for x in batch])
+        inputs["labels"] =  torch.tensor([x["label"] for x in batch])
+        inputs["task_name"] = self.task_name
+        return inputs
+'''
+#END_DEPRECATION

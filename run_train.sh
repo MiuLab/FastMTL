@@ -14,7 +14,8 @@ export TRAIN_DISC_CE=${12}
 export TO_VIS_HIDDEN=${13}
 export WEIGHT_LOSS=${14}
 export SUBDATASET_FILE=${15}
-
+export DO_PREDICT_GRAD=${16}
+export TRAIN_GRAD_DISC=${17}
 
 export TASK_NAME=all
 source ./python_alias.sh
@@ -35,16 +36,16 @@ DATA=( ['mnli']=$((392702/$USE_PER_DIV))
 
 if [ "$USE_ABS" -gt "0" ]
 then
-	declare -A DATA
-	DATA=( ['mnli']=$USE_ABS
-	    ['rte']=$USE_ABS
-	    ['qqp']=$USE_ABS
-	    ['qnli']=$USE_ABS
-	    ['mrpc']=$USE_ABS
-	    ['sst2']=$USE_ABS
-	    ['cola']=$USE_ABS
-	    ['stsb']=$USE_ABS
-	    ['all']=0 )
+  declare -A DATA
+  DATA=( ['mnli']=$USE_ABS
+      ['rte']=$USE_ABS
+      ['qqp']=$USE_ABS
+      ['qnli']=$USE_ABS
+      ['mrpc']=$USE_ABS
+      ['sst2']=$USE_ABS
+      ['cola']=$USE_ABS
+      ['stsb']=$USE_ABS
+      ['all']=0 )
 fi
 
 #Data num
@@ -100,6 +101,19 @@ else
     WEIGHT_LOSS=""
 fi
 
+if [ "$TRAIN_GRAD_DISC" = "True" ]
+then
+    TRAIN_GRAD_DISC="--train_grad_disc"
+else
+    TRAIN_GRAD_DISC=""
+fi
+if [ "$DO_PREDICT_GRAD" = "True" ]
+then
+    DO_PREDICT_GRAD="--do_predict_grad"
+else
+    DO_PREDICT_GRAD=""
+fi
+
 #Run
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path bert-base-cased \
@@ -126,7 +140,9 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   $TRAIN_DISC_CE \
   $WEIGHT_LOSS \
   --rank_type $RANK_TYPE \
-  --output_dir ./results/${MODEL_NAME}_${POSTFIX}/
+  --output_dir ./results/${MODEL_NAME}_${POSTFIX}/ \
+  $DO_PREDICT_GRAD \
+  $TRAIN_GRAD_DISC
 
 
 
