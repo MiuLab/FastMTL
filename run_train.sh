@@ -115,16 +115,17 @@ else
 fi
 
 #Run
+
+#  --do_eval \
+#  --do_train \
 CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --model_name_or_path bert-base-cased \
-  --do_train \
-  --do_eval \
   --task_name $TASK_NAME \
   --fp16 \
   --max_seq_length 128 \
   --seed 13 \
   --per_device_train_batch_size $BATCHSIZE \
-  --per_device_eval_batch_size 128 \
+  --per_device_eval_batch_size 8 \
   --save_steps $SAVE_STEPS \
   --learning_rate 2e-5 \
   --num_train_epochs 5 \

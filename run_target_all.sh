@@ -5,7 +5,7 @@ export SUBDATASET_FINETUNE="False"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
 export SUBDATASET_SEED=""
 export POSTFIX=rand500DBCE
-export BATCHSIZE=8
+export BATCHSIZE=2
 export USE_PER=100
 export USE_ABS=500
 #export LOAD_RANK_DIR=rank_files/bert-base/
@@ -13,7 +13,7 @@ export USE_ABS=500
 export LOAD_RANK_DIR="None"
 # eval_loss_rank, entropy rank
 export RANK_TYPE="None"
-export CUDA=2
+export CUDA=1
 export TRAIN_TASK_DISC="False"
 #export TRAIN_TASK_DISC="False"
 #export MTDNN_TARGET_TASK="stsb"
@@ -49,6 +49,7 @@ else
 
 fi
 ./run_train.sh $MODEL_NAME $POSTFIX $BATCHSIZE $USE_PER $USE_ABS $LOAD_RANK_DIR $RANK_TYPE $CUDA $TRAIN_TASK_DISC $MTDNN_TARGET_TASK $DO_PREDICT_TASK $TRAIN_DISC_CE $TO_VIS_HIDDEN $WEIGHT_LOSS $SUBDATASET_FILE $DO_PREDICT_GRAD $TRAIN_GRAD_DISC
+python3 task_disc_to_rank_files.py results/${MODEL_NAME}_${POSTFIX}/
 exit
 #reset param
 
