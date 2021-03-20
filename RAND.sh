@@ -4,11 +4,17 @@ export SUBDATASET_NUM="-1"
 export SUBDATASET_FINETUNE="False"
 # To change seed, check the fast-mtdnn/subdataset_dir for all availabel seed and NUM
 export SUBDATASET_SEED=""
-export POSTFIX=rand500_rand
+export SEED=$1
+if [ "$SEED" = "0" ]
+then
+    SEED=""
+fi
+export DNUM=$2
+export POSTFIX=rand500_rand${SEED}
 export BATCHSIZE=32
 export USE_PER=100
 export CUDA=1
-export TASK_USE_ABS=${1}
+export TASK_USE_ABS=${DNUM}
 export TASK_LOAD_RANK_DIR="rank_files/${POSTFIX}"
 export TASK_RANK_TYPE="random"
 export TASK_TRAIN_TASK_DISC="False"

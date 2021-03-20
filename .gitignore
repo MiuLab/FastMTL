@@ -1,8 +1,10 @@
 #ignore files
+plot_scores/plot_scores/all_dir_names.txt
 plot_scores/
 plot_scores/*txt
 models/*
 *~
+*.zip
 results/*
 rank_files/*
 figure/*.png

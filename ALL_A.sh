@@ -1,10 +1,15 @@
-SEED=("1" "2" "3")
+TYPE=("DBCE" "DCE")
+SEED=("0" "1" "2")
 NUM=("1000" "2000")
 
-for N in "${NUM[@]}"
+for T in "${TYPE[@]}"
 do
-    for S in "${SEED[@]}"
+    for N in "${NUM[@]}"
     do
-        ./BCE${S}.sh $N
+        for S in "${SEED[@]}"
+        do
+            ./BCE_CE.sh $T $S $N
+        done
     done
 done
+
