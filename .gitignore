@@ -1,0 +1,18 @@
+#ignore files
+plot_scores/
+plot_scores/*txt
+models/*
+*~
+results/*
+rank_files/*
+figure/*.png
+figure/*.npy
+test.py
+a.sh
+b.sh
+test0.sh
+
+#ignore directories
+__pycache__/
+runs/
+results/
