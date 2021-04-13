@@ -13,7 +13,7 @@ export HTDOCS_JSON=${HTDOCS}/json
 ./run_eval_finetune.sh $MODEL_NAME $POSTFIX $TASK_USE_ABS $BATCHSIZE $TOTAL_EPOCH $CUDA $SUBDATASET_NUM
 wait
 #GET Best scores of finetune
-python3 tools/print_loss.py ${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS} --finetune --epoch_num $TOTAL_EPOCH --best_dir
+python3 tools/print_score.py ${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS} --finetune --epoch_num $TOTAL_EPOCH --best_dir
 wait
 #Predict using the best eval checkpoint
 ./run_predict_finetune.sh $MODEL_NAME $POSTFIX $TASK_USE_ABS $BATCHSIZE $TOTAL_EPOCH $CUDA $SUBDATASET_NUM
