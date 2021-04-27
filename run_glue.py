@@ -177,6 +177,10 @@ class DataTrainingArguments:
             "help" : "if want to use sub train set, specify the subdataset id file"
         }
     )
+    check_intask_efficacy: Optional[bool] = field(
+        default=False,
+        metadata={"help" : "If we want to check intask efficacy, swich the data with same distribution."}
+    )
 
     def __post_init__(self):
         if self.task_name is not None:
@@ -500,6 +504,7 @@ def main():
         #MODIFY--> Init unused dataset ausing eval dataset
         unused_train_dataset = eval_dataset
         unused_list = [-1]
+        original_use_list = []
         #MODIFY --> add use percent of data
         if (data_args.use_data_percent < 100) or (data_args.use_data_abs > 0):
             #The setting will match the setting in shell script, use two divide with floor...
@@ -528,9 +533,27 @@ def main():
                         # the rank here is revers, we use the smallest rank
                         # we use the use_data_abs, the rank start from 1, so we use <=
                         use_list = []
+                        if data_args.check_intask_efficacy: #check intask efficacy, get random rank
+                            #CIE --> check_intask_efficacy
+                            CIE_random_rank = random.sample(range(len(use_rank)), len(use_rank))
+                            CIE_pointer = 0
                         for idx, rank in enumerate(use_rank):
                             if rank > 0 and rank <= data_args.use_data_abs: # The used(trained) rank will be -1 
-                                use_list.append(idx)
+                                if data_args.check_intask_efficacy:
+                                    #check not used
+                                    while True:
+                                        CIE_data_idx = CIE_random_rank[CIE_pointer]
+                                        if use_rank[CIE_data_idx] > 0: #unused
+                                            use_list.append(CIE_data_idx)
+                                            CIE_pointer += 1
+                                            break
+                                        else:
+                                            CIE_pointer += 1
+                                    original_use_list.append(idx)
+                                else: #normal
+                                    use_list.append(idx)
+
+                            
                 else:
                     #From small to big, forr bert, gpt2, merge ranks
                     use_rank = np.array(ranking[data_args.rank_type])
@@ -541,6 +564,8 @@ def main():
             #CHECK use_list unique
             assert len(use_list) == len(set(use_list)), "ERROR, use_list is not unique...."
             #STORE USE LIST
+            if data_args.check_intask_efficacy:
+                print(f"[{data_args.task_name}] Original: {original_use_list[:10]} --> New: {use_list[:10]}")
             all_use_list_dict[data_args.task_name] = use_list
             unused_list = list(set([i for i in range(len(train_dataset))])-set(use_list))
             #Handle prediction error in trainer, when last batch size has only 1 element...
