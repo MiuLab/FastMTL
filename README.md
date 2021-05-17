@@ -19,4 +19,5 @@ The default experiment settings:
         Models --> results/
         TD-MTDNN T-SNE visualization --> figures/
         The final submission file (For GLUE Benchmark) --> final_submission/
+        !! Notice that in the final submission scores, only the RTE, MRPC and STS-B scores are real. Since the submission requires all tasks data, we copy the files for other tasks in FAKE_TEST3/ to make the submission zip.
 
