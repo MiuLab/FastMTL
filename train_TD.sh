@@ -20,7 +20,7 @@ export USE_ABS=500
 export LOAD_RANK_DIR="None"
 # eval_loss_rank, entropy rank
 export RANK_TYPE="None"
-export CUDA=1
+export CUDA=0
 export TRAIN_TASK_DISC="True"
 #export TRAIN_TASK_DISC="False"
 #export MTDNN_TARGET_TASK="stsb"
@@ -63,3 +63,4 @@ else
 fi
 ./run_train_TD.sh $MODEL_NAME $POSTFIX $BATCHSIZE $USE_PER $USE_ABS $LOAD_RANK_DIR $RANK_TYPE $CUDA $TRAIN_TASK_DISC $MTDNN_TARGET_TASK $DO_PREDICT_TASK $TRAIN_DISC_CE $TO_VIS_HIDDEN $WEIGHT_LOSS $SUBDATASET_FILE $(( SEED_BASE + SEED ))
 python3 task_disc_to_rank_files.py results/${MODEL_NAME}_${POSTFIX}/
+cp -r results/${MODEL_NAME}_${POSTFIX}/task_disc_rank/ rank_files/rand500_rand4/ 

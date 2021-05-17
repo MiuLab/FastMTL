@@ -87,9 +87,4 @@ done
 #random
 
 
-cd submit
-./submit.sh $MODEL_NAME ${POSTFIX}_${TASK_USE_ABS} n
-wait
-cd ..
 ./post_pipeline.sh $MODEL_NAME $POSTFIX $TASK_USE_ABS $BATCHSIZE $CUDA $SUBDATASET_NUM
-./show_final_score.sh ${MODEL_NAME}_${POSTFIX}_${TASK_USE_ABS}

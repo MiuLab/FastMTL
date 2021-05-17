@@ -1,5 +1,5 @@
 TYPE=("DBCE" "DCE")
-SEED=("5" "6" "7" "8" "9")
+SEED=("4")
 SEED_BASE=200
 
 for T in "${TYPE[@]}"
