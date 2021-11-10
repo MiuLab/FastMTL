@@ -17,54 +17,6 @@ export SUBDATASET_FILE=${15}
 
 
 export TASK_NAME=all
-source ./python_alias.sh
-
-USE_PER_DIV=$((100/$USE_PER))
-
-#need to deal with batch size and steps...
-declare -A DATA
-DATA=( ['mnli']=$((392702/$USE_PER_DIV))
-    ['rte']=$((2490/$USE_PER_DIV))
-    ['qqp']=$((363849/$USE_PER_DIV)) 
-    ['qnli']=$((104743/$USE_PER_DIV)) 
-    ['mrpc']=$((3668/$USE_PER_DIV)) 
-    ['sst2']=$((67349/$USE_PER_DIV)) 
-    ['cola']=$((8551/$USE_PER_DIV)) 
-    ['stsb']=$((5749/$USE_PER_DIV)) 
-    ['all']=0 )
-
-if [ "$USE_ABS" -gt "0" ]
-then
-	declare -A DATA
-	DATA=( ['mnli']=$USE_ABS
-	    ['rte']=$USE_ABS
-	    ['qqp']=$USE_ABS
-	    ['qnli']=$USE_ABS
-	    ['mrpc']=$USE_ABS
-	    ['sst2']=$USE_ABS
-	    ['cola']=$USE_ABS
-	    ['stsb']=$USE_ABS
-	    ['all']=0 )
-fi
-
-#Data num
-#For not all
-D_NUM=${DATA[$TASK_NAME]}
-ceildiv(){ echo $((($1+$2-1)/$2)); }
-SAVE_STEPS=$( ceildiv $D_NUM $BATCHSIZE )
-#For all
-if [ "$TASK_NAME" = "all" ]
-then
-    SAVE_STEPS=0
-    for i in "${!DATA[@]}"
-    do
-        d=${DATA[$i]}
-        s=$( ceildiv $d $BATCHSIZE )
-        SAVE_STEPS=$(( $SAVE_STEPS + $s ))
-    done
-fi
-echo $SAVE_STEPS
-echo $USE_PER
 SAVE_STEPS=10000000
 
 if [ "$TRAIN_TASK_DISC" = "True" ]

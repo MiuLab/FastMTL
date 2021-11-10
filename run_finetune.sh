@@ -4,14 +4,7 @@ export POSTFIX=$3
 export BATCHSIZE=$4
 export CUDA=$5
 export SUBDATASET_FINETUNE_FILE=$6
-export SUBDATASET_NUM=$7
-export USE_PER=100
-USE_PER_DIV=$((100/$USE_PER))
 
-source ./python_alias.sh
-
-#need to deal with batch size and steps...
-declare -A DATA
 SAVE_STEPS="-1"
 echo "Save Steps ---------------- $SAVE_STEPS "
 
@@ -31,7 +24,6 @@ CUDA_VISIBLE_DEVICES=$CUDA python3 run_glue.py \
   --num_train_epochs 5 \
   --overwrite_output_dir \
   --output_dir ./results/finetune_${MODEL_NAME}_${POSTFIX}/
-  #--model_name_or_path bert-base-cased \
 
 #Need to do this incase that the trainer load the state in finetuning for continue training
 #When continue training, modify the trainer_log.json back to trainer_state.json, and the model can continue training

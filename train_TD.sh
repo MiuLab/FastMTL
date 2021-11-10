@@ -10,20 +10,14 @@ if [ "$SEED" = "0" ]
 then
     SEED=""
 fi
-export DNUM=0
 export POSTFIX=rand500${TYPE}${SEED}
 export BATCHSIZE=32
 export USE_PER=100
 export USE_ABS=500
-#export LOAD_RANK_DIR=rank_files/bert-base/
-#export LOAD_RANK_DIR="results/all_T0/task_disc_rank"
 export LOAD_RANK_DIR="None"
-# eval_loss_rank, entropy rank
 export RANK_TYPE="None"
 export CUDA=1
 export TRAIN_TASK_DISC="True"
-#export TRAIN_TASK_DISC="False"
-#export MTDNN_TARGET_TASK="stsb"
 export MTDNN_TARGET_TASK="None"
 export DO_PREDICT_TASK="True"
 if [ $TYPE = "DBCE" ]
@@ -38,25 +32,18 @@ export TO_VIS_HIDDEN="True"
 export WEIGHT_LOSS="False"
 export SEED_BASE=$3
 
-source ./python_alias.sh
-
-#export TRAIN_DISC_CE="True"
-#export DO_PREDICT_TASK=" "
 if [ $SUBDATASET_NUM = "-1" ]
 then
     echo "--------- Use ALL ----------"
     export MODEL_NAME=all
     export SUBDATASET_FILE="None"
-    export SUBDATASET_FINETUNE_FILE="None"
 else
     export SUBDATASET_FILE=subdataset_dir/${SUBDATASET_NUM}_${SUBDATASET_SEED}.json
     if [ $SUBDATASET_FINETUNE = "False" ]
     then
         export IF_SF=""
-        export SUBDATASET_FINETUNE_FILE="None"
     else
         export IF_SF="SF_"
-        export SUBDATASET_FINETUNE_FILE=$SUBDATASET_FILE
     fi
     export MODEL_NAME=${IF_SF}sub_${SUBDATASET_NUM}_${SUBDATASET_SEED}
 
